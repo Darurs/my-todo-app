@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#6366f1" id="theme-color-meta">
+  <meta name="description" content="A clean, modern Android Material Design inspired To-Do app with offline storage.">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <title>Material Task - Android Web To-Do</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#eef2ff',
+              100: '#e0e7ff',
+              500: '#6366f1',
+              600: '#4f46e5',
+              700: '#4338ca',
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'Roboto', 'system-ui', '-apple-system', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Material Design smooth transitions and mobile tap improvements */
+    * {
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+    input, textarea, select {
+      user-select: auto;
+    }
+    .scrollbar-none::-webkit-scrollbar {
+      display: none;
+    }
+    .scrollbar-none {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+    .ripple {
+      position: relative;
+      overflow: hidden;
+    }
+    @keyframes checkmarkPop {
+      0% { transform: scale(0.7); opacity: 0; }
+      50% { transform: scale(1.2); }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    .animate-pop {
+      animation: checkmarkPop 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    }
+  </style>
+</head>
+
+<body class="h-full bg-slate-100 text-slate-900 dark:bg-slate-950 dark:text-slate-100 transition-colors duration-200 antialiased font-sans flex flex-col justify-between">
+
+  <header class="sticky top-0 z-30 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-4 pt-3 pb-3">
+    <div class="max-w-md mx-auto flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 rounded-2xl bg-brand-500 text-white flex items-center justify-center shadow-md shadow-brand-500/30">
+          <i class="fa-solid fa-check-double text-lg"></i>
+        </div>
+        <div>
+          <h1 class="text-lg font-bold tracking-tight text-slate-800 dark:text-slate-100 leading-tight">My Tasks</h1>
+          <p id="today-date-display" class="text-xs text-slate-500 dark:text-slate-400 font-medium">Loading...</p>
+        </div>
+      </div>
+      <div class="flex items-center space-x-1">
+        <button id="pwa-help-btn" class="p-2.5 rounded-full text-slate-500 hover:text-brand-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" title="Add to Home Screen">
+          <i class="fa-solid fa-mobile-screen-button text-lg"></i>
+        </button>
+        <button id="theme-toggle-btn" class="p-2.5 rounded-full text-slate-500 hover:text-amber-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" title="Toggle Theme">
+          <i id="theme-icon" class="fa-solid fa-moon text-lg"></i>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="flex-1 max-w-md w-full mx-auto p-4 pb-28 overflow-y-auto">
+    
+    <!-- Quick Search Bar -->
+    <div class="relative mb-3">
+      <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+      <input type="text" id="search-input" placeholder="Search tasks..." class="w-full pl-10 pr-10 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 text-slate-800 dark:text-slate-100 placeholder-slate-400 shadow-sm transition">
+      <button id="clear-search-btn" class="hidden absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+        <i class="fa-solid fa-xmark text-sm"></i>
+      </button>
+    </div>
+
+    <!-- Category Filter Chips -->
+    <div class="flex items-center space-x-2 overflow-x-auto pb-2 scrollbar-none mb-3" id="category-chips">
+      <button data-category="all" class="category-chip px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap bg-brand-500 text-white shadow-sm shadow-brand-500/20 transition-transform active:scale-95">
+        All
+      </button>
+      <button data-category="Personal" class="category-chip px-3.5 py-1.5 rounded-full text-xs font-medium whitespace-nowrap bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800 hover:bg-slate-50 transition-transform active:scale-95">
+        <i class="fa-solid fa-user text-purple-500 mr-1"></i> Personal
+      </button>
+      <button data-category="Work" class="category-chip px-3.5 py-1.5 rounded-full text-xs font-medium whitespace-nowrap bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800 hover:bg-slate-50 transition-transform active:scale-95">
+        <i class="fa-solid fa-briefcase text-blue-500 mr-1"></i> Work
+      </button>
+      <button data-category="Shopping" class="category-chip px-3.5 py-1.5 rounded-full text-xs font-medium whitespace-nowrap bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800 hover:bg-slate-50 transition-transform active:scale-95">
+        <i class="fa-solid fa-cart-shopping text-emerald-500 mr-1"></i> Shopping
+      </button>
+      <button data-category="Fitness" class="category-chip px-3.5 py-1.5 rounded-full text-xs font-medium whitespace-nowrap bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800 hover:bg-slate-50 transition-transform active:scale-95">
+        <i class="fa-solid fa-heart-pulse text-rose-500 mr-1"></i> Fitness
+      </button>
+    </div>
+
+    <!-- Status Filter & Counter -->
+    <div class="flex items-center justify-between mb-3 px-1">
+      <div class="flex items-center bg-slate-200/70 dark:bg-slate-800/80 p-1 rounded-xl text-xs font-medium">
+        <button id="filter-all" class="status-btn px-2.5 py-1 rounded-lg bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 shadow-sm transition">All</button>
+        <button id="filter-active" class="status-btn px-2.5 py-1 rounded-lg text-slate-600 dark:text-slate-400 hover:text-slate-900 transition">Active</button>
+        <button id="filter-done" class="status-btn px-2.5 py-1 rounded-lg text-slate-600 dark:text-slate-400 hover:text-slate-900 transition">Completed</button>
+      </div>
+      <span id="task-stats" class="text-xs text-slate-500 dark:text-slate-400 font-medium">0 remaining</span>
+    </div>
+
+    <!-- Task List Container -->
+    <div id="tasks-container" class="space-y-2.5">
+      <!-- Dynamically generated items -->
+    </div>
+
+    <!-- Empty State -->
+    <div id="empty-state" class="hidden text-center py-16 px-4">
+      <div class="w-16 h-16 rounded-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center mx-auto text-slate-400 text-2xl mb-3">
+        <i class="fa-regular fa-clipboard"></i>
+      </div>
+      <h3 class="text-base font-semibold text-slate-700 dark:text-slate-300">No tasks found</h3>
+      <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Tap the plus button below to create your first task!</p>
+    </div>
+  </main>
+
+  <div class="fixed bottom-6 right-6 z-40 max-w-md">
+    <button id="open-sheet-btn" class="w-14 h-14 rounded-full bg-brand-500 hover:bg-brand-600 active:scale-95 text-white flex items-center justify-center shadow-lg shadow-brand-500/40 transition-transform duration-150 focus:outline-none" aria-label="Add task">
+      <i class="fa-solid fa-plus text-xl"></i>
+    </button>
+  </div>
+
+  <div id="sheet-overlay" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 opacity-0 pointer-events-none transition-opacity duration-200"></div>
+
+  <div id="bottom-sheet" class="fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-slate-900 rounded-t-3xl p-5 shadow-2xl border-t border-slate-200 dark:border-slate-800 transform translate-y-full transition-transform duration-300 max-w-md mx-auto">
+    <!-- Drag handle -->
+    <div class="w-10 h-1.5 bg-slate-300 dark:bg-slate-700 rounded-full mx-auto mb-4"></div>
+
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="text-base font-bold text-slate-800 dark:text-slate-100">Add New Task</h2>
+      <button id="close-sheet-btn" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1">
+        <i class="fa-solid fa-xmark text-lg"></i>
+      </button>
+    </div>
+
+    <form id="add-task-form" class="space-y-4">
+      <div>
+        <label for="task-title" class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">TASK TITLE</label>
+        <input type="text" id="task-title" required placeholder="What do you want to accomplish?" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 text-slate-800 dark:text-slate-100">
+      </div>
+
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label for="task-category" class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">CATEGORY</label>
+          <select id="task-category" class="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 text-slate-800 dark:text-slate-100">
+            <option value="Personal">Personal</option>
+            <option value="Work">Work</option>
+            <option value="Shopping">Shopping</option>
+            <option value="Fitness">Fitness</option>
+          </select>
+        </div>
+
+        <div>
+          <label for="task-priority" class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">PRIORITY</label>
+          <select id="task-priority" class="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 text-slate-800 dark:text-slate-100">
+            <option value="Low">🟢 Low</option>
+            <option value="Medium" selected>🟡 Medium</option>
+            <option value="High">🔴 High</option>
+          </select>
+        </div>
+      </div>
+
+      <div>
+        <label for="task-due-date" class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">DUE DATE (OPTIONAL)</label>
+        <input type="date" id="task-due-date" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 text-slate-800 dark:text-slate-100">
+      </div>
+
+      <button type="submit" class="w-full py-3 bg-brand-500 hover:bg-brand-600 active:scale-[0.98] text-white font-medium rounded-xl text-sm shadow-md shadow-brand-500/30 transition">
+        Save Task
+      </button>
+    </form>
+  </div>
+
+  <div id="pwa-modal-overlay" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white dark:bg-slate-900 w-full max-w-sm rounded-3xl p-5 shadow-2xl border border-slate-200 dark:border-slate-800">
+      <div class="flex items-center justify-between mb-3">
+        <h3 class="font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+          <i class="fa-brands fa-android text-emerald-500 text-xl"></i>
+          Install on Android
+        </h3>
+        <button id="close-pwa-modal-btn" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+      <p class="text-xs text-slate-500 dark:text-slate-400 mb-4">
+        You can turn this web page into a real fullscreen app on your Android phone in 3 simple taps:
+      </p>
+
+      <ol class="text-xs space-y-2.5 text-slate-600 dark:text-slate-300 mb-5">
+        <li class="flex items-start gap-2">
+          <span class="font-bold text-brand-500 bg-brand-50 dark:bg-brand-900/30 px-2 py-0.5 rounded-full">1</span>
+          <span>Open this link in <strong>Chrome</strong> on your Android phone.</span>
+        </li>
+        <li class="flex items-start gap-2">
+          <span class="font-bold text-brand-500 bg-brand-50 dark:bg-brand-900/30 px-2 py-0.5 rounded-full">2</span>
+          <span>Tap the <strong>three dots (⋮)</strong> menu in the upper-right corner.</span>
+        </li>
+        <li class="flex items-start gap-2">
+          <span class="font-bold text-brand-500 bg-brand-50 dark:bg-brand-900/30 px-2 py-0.5 rounded-full">3</span>
+          <span>Select <strong>"Add to Home screen"</strong> or <strong>"Install app"</strong>.</span>
+        </li>
+      </ol>
+
+      <div class="bg-slate-50 dark:bg-slate-800 p-3 rounded-xl flex items-center justify-between mb-4 border border-slate-200 dark:border-slate-700">
+        <div class="text-xs text-slate-500 truncate mr-2" id="share-link-text">window.location.href</div>
+        <button id="copy-link-btn" class="text-xs px-2.5 py-1.5 bg-brand-500 text-white rounded-lg active:scale-95 font-medium whitespace-nowrap">
+          Copy Link
+        </button>
+      </div>
+
+      <button id="got-it-btn" class="w-full py-2.5 bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-semibold rounded-xl transition">
+        Got it!
+      </button>
+    </div>
+  </div>
+
+  <!-- Notification Toast -->
+  <div id="toast" class="fixed top-5 left-1/2 -translate-x-1/2 z-50 bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-xs font-medium px-4 py-2 rounded-full shadow-lg opacity-0 pointer-events-none transition-all duration-300 -translate-y-4">
+    Task saved
+  </div>
+
+  <script>
+    // State Variables
+    let tasks = [];
+    let currentFilter = 'all'; // all, active, done
+    let currentCategory = 'all';
+    let searchQuery = '';
+
+    // Elements
+    const tasksContainer = document.getElementById('tasks-container');
+    const emptyState = document.getElementById('empty-state');
+    const taskStats = document.getElementById('task-stats');
+    const searchInput = document.getElementById('search-input');
+    const clearSearchBtn = document.getElementById('clear-search-btn');
+    const todayDateDisplay = document.getElementById('today-date-display');
+    const themeToggleBtn = document.getElementById('theme-toggle-btn');
+    const themeIcon = document.getElementById('theme-icon');
+    const toast = document.getElementById('toast');
+
+    // Bottom sheet elements
+    const openSheetBtn = document.getElementById('open-sheet-btn');
+    const closeSheetBtn = document.getElementById('close-sheet-btn');
+    const bottomSheet = document.getElementById('bottom-sheet');
+    const sheetOverlay = document.getElementById('sheet-overlay');
+    const addTaskForm = document.getElementById('add-task-form');
+
+    // PWA Modal elements
+    const pwaHelpBtn = document.getElementById('pwa-help-btn');
+    const pwaModalOverlay = document.getElementById('pwa-modal-overlay');
+    const closePwaModalBtn = document.getElementById('close-pwa-modal-btn');
+    const gotItBtn = document.getElementById('got-it-btn');
+    const copyLinkBtn = document.getElementById('copy-link-btn');
+    const shareLinkText = document.getElementById('share-link-text');
+
+    function initApp() {
+      // Set current date
+      const options = { weekday: 'short', month: 'short', day: 'numeric' };
+      todayDateDisplay.textContent = new Date().toLocaleDateString(undefined, options);
+
+      // Load tasks from localStorage
+      const savedTasks = localStorage.getItem('android_todo_tasks');
+      if (savedTasks) {
+        try {
+          tasks = JSON.parse(savedTasks);
+        } catch (e) {
+          tasks = [];
+        }
+      } else {
+        // Starter sample tasks for beginner friendly experience
+        tasks = [
+          {
+            id: '1',
+            title: 'Welcome to your Android To-Do app! 📱',
+            category: 'Personal',
+            priority: 'High',
+            dueDate: '',
+            completed: false,
+            createdAt: Date.now()
+          },
+          {
+            id: '2',
+            title: 'Add this app to your Android home screen',
+            category: 'Work',
+            priority: 'Medium',
+            dueDate: '',
+            completed: false,
+            createdAt: Date.now() - 10000
+          },
+          {
+            id: '3',
+            title: 'Tap the checkmark circle to mark tasks complete',
+            category: 'Shopping',
+            priority: 'Low',
+            dueDate: '',
+            completed: true,
+            createdAt: Date.now() - 20000
+          }
+        ];
+        saveTasks();
+      }
+
+      // Initialize theme
+      initTheme();
+
+      // Render tasks
+      renderTasks();
+
+      // Set link in PWA helper
+      shareLinkText.textContent = window.location.href;
+    }
+
+    function saveTasks() {
+      localStorage.setItem('android_todo_tasks', JSON.stringify(tasks));
+      renderTasks();
+    }
+
+    function initTheme() {
+      const savedTheme = localStorage.getItem('android_todo_theme');
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+      if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+        document.documentElement.classList.add('dark');
+        themeIcon.classList.replace('fa-moon', 'fa-sun');
+      } else {
+        document.documentElement.classList.remove('dark');
+        themeIcon.classList.replace('fa-sun', 'fa-moon');
+      }
+    }
+
+    themeToggleBtn.addEventListener('click', () => {
+      const isDark = document.documentElement.classList.toggle('dark');
+      if (isDark) {
+        localStorage.setItem('android_todo_theme', 'dark');
+        themeIcon.classList.replace('fa-moon', 'fa-sun');
+      } else {
+        localStorage.setItem('android_todo_theme', 'light');
+        themeIcon.classList.replace('fa-sun', 'fa-moon');
+      }
+    });
+
+    function getPriorityBadge(priority) {
+      if (priority === 'High') {
+        return `<span class="text-[10px] px-2 py-0.5 rounded-full bg-rose-50 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400 font-semibold border border-rose-200 dark:border-rose-800">High</span>`;
+      } else if (priority === 'Medium') {
+        return `<span class="text-[10px] px-2 py-0.5 rounded-full bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 font-semibold border border-amber-200 dark:border-amber-800">Med</span>`;
+      } else {
+        return `<span class="text-[10px] px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-medium">Low</span>`;
+      }
+    }
+
+    function getCategoryIcon(category) {
+      switch(category) {
+        case 'Work': return `<i class="fa-solid fa-briefcase text-blue-500 mr-1"></i>`;
+        case 'Shopping': return `<i class="fa-solid fa-cart-shopping text-emerald-500 mr-1"></i>`;
+        case 'Fitness': return `<i class="fa-solid fa-heart-pulse text-rose-500 mr-1"></i>`;
+        default: return `<i class="fa-solid fa-user text-purple-500 mr-1"></i>`;
+      }
+    }
+
+    function renderTasks() {
+      // Filter logic
+      const filtered = tasks.filter(task => {
+        // Status filter
+        if (currentFilter === 'active' && task.completed) return false;
+        if (currentFilter === 'done' && !task.completed) return false;
+
+        // Category filter
+        if (currentCategory !== 'all' && task.category !== currentCategory) return false;
+
+        // Search query
+        if (searchQuery.trim() !== '') {
+          const matchTitle = task.title.toLowerCase().includes(searchQuery.toLowerCase());
+          const matchCat = task.category.toLowerCase().includes(searchQuery.toLowerCase());
+          if (!matchTitle && !matchCat) return false;
+        }
+
+        return true;
+      });
+
+      // Update remaining count
+      const remainingCount = tasks.filter(t => !t.completed).length;
+      taskStats.textContent = `${remainingCount} left`;
+
+      // Clear container
+      tasksContainer.innerHTML = '';
+
+      if (filtered.length === 0) {
+        emptyState.classList.remove('hidden');
+      } else {
+        emptyState.classList.add('hidden');
+        filtered.forEach(task => {
+          const card = document.createElement('div');
+          card.className = `group bg-white dark:bg-slate-900 border ${task.completed ? 'border-slate-200 dark:border-slate-800/60 opacity-65' : 'border-slate-200 dark:border-slate-800 shadow-sm'} rounded-2xl p-3.5 flex items-start justify-between gap-3 transition-all duration-200 hover:shadow-md`;
+
+          const checkIcon = task.completed
+            ? `<i class="fa-solid fa-check text-white text-xs animate-pop"></i>`
+            : '';
+
+          const checkBg = task.completed
+            ? `bg-brand-500 border-brand-500`
+            : `border-slate-300 dark:border-slate-600 hover:border-brand-500 bg-slate-50 dark:bg-slate-800`;
+
+          const dateDisplay = task.dueDate 
+            ? `<span class="text-[11px] text-slate-400 dark:text-slate-500 flex items-center gap-1"><i class="fa-regular fa-calendar text-[10px]"></i> ${task.dueDate}</span>` 
+            : '';
+
+          card.innerHTML = `
+            <div class="flex items-start gap-3 flex-1 min-w-0">
+              <button data-id="${task.id}" class="toggle-task-btn mt-0.5 w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-colors ${checkBg}">
+                ${checkIcon}
+              </button>
+              <div class="flex-1 min-w-0">
+                <p class="text-sm font-medium ${task.completed ? 'line-through text-slate-400 dark:text-slate-500' : 'text-slate-800 dark:text-slate-100'} break-words">
+                  ${escapeHtml(task.title)}
+                </p>
+                <div class="flex flex-wrap items-center gap-2 mt-1.5">
+                  <span class="text-[11px] text-slate-500 dark:text-slate-400 font-medium flex items-center">
+                    ${getCategoryIcon(task.category)} ${task.category}
+                  </span>
+                  ${getPriorityBadge(task.priority)}
+                  ${dateDisplay}
+                </div>
+              </div>
+            </div>
+            <button data-id="${task.id}" class="delete-task-btn text-slate-300 hover:text-rose-500 dark:text-slate-600 dark:hover:text-rose-400 p-1.5 transition-colors" title="Delete task">
+              <i class="fa-regular fa-trash-can text-sm"></i>
+            </button>
+          `;
+
+          tasksContainer.appendChild(card);
+        });
+      }
+    }
+
+    function escapeHtml(str) {
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
+
+    tasksContainer.addEventListener('click', (e) => {
+      const toggleBtn = e.target.closest('.toggle-task-btn');
+      const deleteBtn = e.target.closest('.delete-task-btn');
+
+      if (toggleBtn) {
+        const id = toggleBtn.dataset.id;
+        tasks = tasks.map(t => t.id === id ? { ...t, completed: !t.completed } : t);
+        saveTasks();
+        showToast('Task updated');
+      }
+
+      if (deleteBtn) {
+        const id = deleteBtn.dataset.id;
+        tasks = tasks.filter(t => t.id !== id);
+        saveTasks();
+        showToast('Task deleted');
+      }
+    });
+
+    addTaskForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const titleInput = document.getElementById('task-title');
+      const categoryInput = document.getElementById('task-category');
+      const priorityInput = document.getElementById('task-priority');
+      const dueDateInput = document.getElementById('task-due-date');
+
+      const title = titleInput.value.trim();
+      if (!title) return;
+
+      const newTask = {
+        id: Date.now().toString(),
+        title: title,
+        category: categoryInput.value,
+        priority: priorityInput.value,
+        dueDate: dueDateInput.value,
+        completed: false,
+        createdAt: Date.now()
+      };
+
+      tasks.unshift(newTask);
+      saveTasks();
+      closeSheet();
+      addTaskForm.reset();
+      showToast('Task created successfully');
+    });
+
+    function openSheet() {
+      sheetOverlay.classList.remove('opacity-0', 'pointer-events-none');
+      bottomSheet.classList.remove('translate-y-full');
+      setTimeout(() => document.getElementById('task-title').focus(), 150);
+    }
+
+    function closeSheet() {
+      sheetOverlay.classList.add('opacity-0', 'pointer-events-none');
+      bottomSheet.classList.add('translate-y-full');
+    }
+
+    openSheetBtn.addEventListener('click', openSheet);
+    closeSheetBtn.addEventListener('click', closeSheet);
+    sheetOverlay.addEventListener('click', closeSheet);
+
+    searchInput.addEventListener('input', (e) => {
+      searchQuery = e.target.value;
+      clearSearchBtn.classList.toggle('hidden', !searchQuery);
+      renderTasks();
+    });
+
+    clearSearchBtn.addEventListener('click', () => {
+      searchInput.value = '';
+      searchQuery = '';
+      clearSearchBtn.classList.add('hidden');
+      renderTasks();
+    });
+
+    // Category chips click
+    document.querySelectorAll('.category-chip').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.category-chip').forEach(b => {
+          b.classList.remove('bg-brand-500', 'text-white', 'shadow-sm', 'shadow-brand-500/20');
+          b.classList.add('bg-white', 'dark:bg-slate-900', 'text-slate-600', 'dark:text-slate-300', 'border', 'border-slate-200', 'dark:border-slate-800');
+        });
+
+        btn.classList.add('bg-brand-500', 'text-white', 'shadow-sm', 'shadow-brand-500/20');
+        btn.classList.remove('bg-white', 'dark:bg-slate-900', 'text-slate-600', 'dark:text-slate-300', 'border', 'border-slate-200', 'dark:border-slate-800');
+
+        currentCategory = btn.dataset.category;
+        renderTasks();
+      });
+    });
+
+    // Status filter buttons
+    const filterAllBtn = document.getElementById('filter-all');
+    const filterActiveBtn = document.getElementById('filter-active');
+    const filterDoneBtn = document.getElementById('filter-done');
+    const statusBtns = [filterAllBtn, filterActiveBtn, filterDoneBtn];
+
+    function setStatusActive(activeBtn, status) {
+      statusBtns.forEach(btn => {
+        btn.classList.remove('bg-white', 'dark:bg-slate-900', 'text-slate-800', 'dark:text-slate-100', 'shadow-sm');
+        btn.classList.add('text-slate-600', 'dark:text-slate-400');
+      });
+      activeBtn.classList.add('bg-white', 'dark:bg-slate-900', 'text-slate-800', 'dark:text-slate-100', 'shadow-sm');
+      activeBtn.classList.remove('text-slate-600', 'dark:text-slate-400');
+      currentFilter = status;
+      renderTasks();
+    }
+
+    filterAllBtn.addEventListener('click', () => setStatusActive(filterAllBtn, 'all'));
+    filterActiveBtn.addEventListener('click', () => setStatusActive(filterActiveBtn, 'active'));
+    filterDoneBtn.addEventListener('click', () => setStatusActive(filterDoneBtn, 'done'));
+
+    pwaHelpBtn.addEventListener('click', () => {
+      pwaModalOverlay.classList.remove('hidden');
+    });
+
+    closePwaModalBtn.addEventListener('click', () => {
+      pwaModalOverlay.classList.add('hidden');
+    });
+
+    gotItBtn.addEventListener('click', () => {
+      pwaModalOverlay.classList.add('hidden');
+    });
+
+    pwaModalOverlay.addEventListener('click', (e) => {
+      if (e.target === pwaModalOverlay) pwaModalOverlay.classList.add('hidden');
+    });
+
+    copyLinkBtn.addEventListener('click', () => {
+      const dummy = document.createElement('textarea');
+      dummy.value = window.location.href;
+      document.body.appendChild(dummy);
+      dummy.select();
+      document.execCommand('copy');
+      document.body.removeChild(dummy);
+
+      copyLinkBtn.textContent = 'Copied!';
+      setTimeout(() => { copyLinkBtn.textContent = 'Copy Link'; }, 2000);
+      showToast('Link copied to clipboard');
+    });
+
+    let toastTimeout;
+    function showToast(message) {
+      clearTimeout(toastTimeout);
+      toast.textContent = message;
+      toast.classList.remove('opacity-0', 'pointer-events-none', '-translate-y-4');
+      toastTimeout = setTimeout(() => {
+        toast.classList.add('opacity-0', 'pointer-events-none', '-translate-y-4');
+      }, 2200);
+    }
+
+    // Start App
+    window.addEventListener('DOMContentLoaded', initApp);
+  </script>
+</body>
+</html>
