@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" class="h-full select-none bg-black">
+<html lang="en" class="h-full bg-black">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
@@ -10,6 +10,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>LCARS 47 // TASK DIRECTIVES</title>
 
+  <!-- Tailwind CSS & Icons -->
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -28,12 +29,12 @@
       --lcars-sky: #6688cc;
       --lcars-cyan: #33bbff;
       --lcars-gold: #ffcc00;
-      --lcars-gray: #556677;
+      --lcars-gray: #445566;
     }
 
     * {
       box-sizing: border-box;
-      -webkit-tap-highlight-color: transparent;
+      -webkit-tap-highlight-color: rgba(255, 153, 0, 0.2);
     }
 
     body {
@@ -45,18 +46,16 @@
       overflow-x: hidden;
     }
 
+    /* Keep font readable and mono for Stardates & technical indicators */
     .font-mono-stardate {
       font-family: 'Share Tech Mono', monospace;
-      letter-spacing: 0.1em;
+      letter-spacing: 0.08em;
     }
 
-    /* LCARS characteristic elbow shapes */
+    /* LCARS architectural curves */
     .lcars-elbow-top {
-      border-top-left-radius: 28px;
+      border-top-left-radius: 26px;
       border-bottom-left-radius: 0;
-    }
-    .lcars-elbow-bottom {
-      border-bottom-left-radius: 28px;
     }
     .lcars-pill-left {
       border-top-left-radius: 9999px;
@@ -70,23 +69,45 @@
       border-radius: 9999px;
     }
 
-    /* Scanline overlay for that genuine ship console screen vibe */
-    .scanlines {
+    /* Subtle LCARS scanline effect that strictly allows all touch/click through */
+    .scanlines-overlay {
+      position: fixed;
+      inset: 0;
       background: linear-gradient(
         to bottom,
         rgba(255,255,255,0),
         rgba(255,255,255,0) 50%,
-        rgba(0, 0, 0, 0.35) 51%,
-        rgba(0, 0, 0, 0.35)
+        rgba(0, 0, 0, 0.28) 51%,
+        rgba(0, 0, 0, 0.28)
       );
       background-size: 100% 4px;
-      pointer-events: none;
+      pointer-events: none !important;
+      z-index: 30;
     }
 
-    /* Button active glow states */
+    /* Prevent text selection only on graphic controls, never on inputs */
+    .unselectable {
+      -webkit-user-select: none;
+      user-select: none;
+    }
+
+    /* Tactile button active states */
+    .lcars-btn {
+      touch-action: manipulation;
+      cursor: pointer;
+    }
     .lcars-btn:active {
-      filter: brightness(1.35);
-      transform: scale(0.975);
+      filter: brightness(1.3);
+      transform: scale(0.97);
+    }
+
+    /* Text input overrides for mobile keyboard usability */
+    input, select, textarea {
+      text-transform: none;
+      -webkit-user-select: auto !important;
+      user-select: auto !important;
+      touch-action: auto !important;
+      font-size: 16px !important; /* Prevents auto-zoom on iOS & Android */
     }
 
     .scrollbar-none::-webkit-scrollbar {
@@ -99,39 +120,42 @@
   </style>
 </head>
 
-<body class="h-full flex flex-col justify-between scanlines min-h-screen text-slate-100">
+<body class="h-full flex flex-col justify-between min-h-screen text-slate-100 relative">
+
+  <!-- Scanline CRT atmospheric backdrop (Non-blocking) -->
+  <div class="scanlines-overlay"></div>
 
   <!-- TOP LCARS HEADER & ARCH -->
-  <header class="w-full bg-black pt-2 px-2 pb-1 border-b border-[#331100]">
+  <header class="w-full bg-black pt-2 px-2 pb-1 border-b border-[#331100] relative z-10 unselectable">
     <div class="max-w-xl mx-auto">
       
       <!-- Stardate and system status line -->
       <div class="flex items-center justify-between text-xs font-mono-stardate text-[#ff9900] px-1 pb-1">
         <div class="flex items-center gap-2">
-          <span class="inline-block w-2.5 h-2.5 rounded-full bg-[#33bbff] animate-ping"></span>
-          <span>SYS 47 // USS ENTERPRISE</span>
+          <span class="inline-block w-2.5 h-2.5 rounded-full bg-[#33bbff] animate-pulse"></span>
+          <span>SYS-47 // USS ENTERPRISE</span>
         </div>
         <div id="stardate-clock" class="text-[#ffaa00] font-bold tracking-wider">
           STARDATE 102456.8
         </div>
       </div>
 
-      <!-- Main LCARS Top Header Elbow Graphic -->
+      <!-- Main LCARS Top Header Graphic Elbow -->
       <div class="flex items-stretch gap-1.5 h-12">
-        <!-- Top Left Curved Elbow -->
+        <!-- Curved Upper-Left Elbow -->
         <div class="w-24 bg-[#ff9900] lcars-elbow-top flex items-end justify-end p-1.5 text-black font-bold text-xs tracking-tighter">
           LCARS 47
         </div>
         
-        <!-- Header Horizontal Bar with cutout aesthetic -->
-        <div class="flex-1 bg-[#ff9966] flex items-center justify-between px-3 text-black font-extrabold text-lg tracking-wider">
+        <!-- Center Banner -->
+        <div class="flex-1 bg-[#ff9966] flex items-center justify-between px-3 text-black font-extrabold text-base sm:text-lg tracking-wider">
           <span>TASK DIRECTIVES</span>
-          <span class="text-xs tracking-widest font-mono-stardate hidden sm:inline">DECK-10 PRIMARY</span>
+          <span class="text-xs tracking-widest font-mono-stardate hidden sm:inline">DECK-10</span>
         </div>
 
         <!-- Audio mute toggle button -->
-        <button id="sound-toggle-btn" class="w-12 bg-[#cc99cc] hover:bg-[#ff9900] text-black font-bold text-xs flex items-center justify-center lcars-pill-right transition-colors" title="Toggle LCARS Audio">
-          <i id="sound-icon" class="fa-solid fa-volume-high text-sm"></i>
+        <button id="sound-toggle-btn" type="button" class="lcars-btn w-12 bg-[#cc99cc] text-black font-bold text-xs flex items-center justify-center lcars-pill-right" title="Toggle LCARS Audio">
+          <i id="sound-icon" class="fa-solid fa-volume-high text-sm pointer-events-none"></i>
         </button>
       </div>
 
@@ -145,52 +169,65 @@
   </header>
 
   <!-- MAIN TERMINAL CONTENT -->
-  <main class="flex-1 max-w-xl w-full mx-auto p-3 pb-24 overflow-y-auto">
+  <main class="flex-1 max-w-xl w-full mx-auto p-3 pb-28 overflow-y-auto relative z-10">
 
-    <!-- Directive Search Interface -->
+    <!-- Search Directive Interface -->
     <div class="flex items-stretch gap-1.5 mb-3">
-      <div class="w-16 bg-[#ff6666] text-black font-bold text-xs flex items-center justify-center lcars-pill-left">
+      <div class="w-14 bg-[#ff6666] text-black font-bold text-xs flex items-center justify-center lcars-pill-left unselectable">
         SRCH
       </div>
       <div class="flex-1 relative">
-        <input type="text" id="lcars-search" placeholder="FILTER LOG OR DIRECTIVES..." class="w-full h-10 px-3 bg-[#111116] border-2 border-[#ff9900] text-[#33bbff] placeholder-[#6688cc] font-mono-stardate text-sm focus:outline-none focus:border-[#ffaa00] transition">
-        <button id="clear-search-btn" class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 text-[#ff6666] hover:text-[#ffaa00]">
-          <i class="fa-solid fa-xmark"></i>
+        <input 
+          type="text" 
+          id="lcars-search" 
+          placeholder="Filter directives or ID..." 
+          autocomplete="off"
+          class="w-full h-11 px-3 bg-[#111116] border-2 border-[#ff9900] text-[#33bbff] placeholder-[#6688cc] font-mono-stardate rounded-none focus:outline-none focus:border-[#ffaa00]">
+        
+        <button 
+          type="button" 
+          id="clear-search-btn" 
+          class="hidden absolute right-3 top-1/2 -translate-y-1/2 text-[#ff6666] hover:text-[#ffaa00] p-2 lcars-btn">
+          <i class="fa-solid fa-xmark text-sm pointer-events-none"></i>
         </button>
       </div>
-      <button id="refresh-order-btn" class="w-12 bg-[#ffaa00] hover:bg-[#ff9966] text-black font-bold text-xs flex items-center justify-center lcars-pill-right" title="Reset Index">
-        <i class="fa-solid fa-rotate"></i>
+      <button 
+        type="button" 
+        id="sort-btn" 
+        class="lcars-btn w-12 bg-[#ffaa00] text-black font-bold text-xs flex items-center justify-center lcars-pill-right" 
+        title="Sort Directives">
+        <i class="fa-solid fa-arrow-down-wide-short pointer-events-none"></i>
       </button>
     </div>
 
-    <!-- STARFLEET DIVISION CHIPS (CATEGORIES) -->
-    <div class="flex items-center gap-1.5 overflow-x-auto pb-2 scrollbar-none mb-3" id="division-chips">
-      <button data-division="all" class="div-chip px-3 py-1.5 bg-[#ff9900] text-black font-bold text-xs lcars-pill transition-all whitespace-nowrap active:scale-95 shadow-sm">
+    <!-- STARFLEET DIVISION FILTER CHIPS -->
+    <div class="flex items-center gap-1.5 overflow-x-auto pb-2 scrollbar-none mb-3 unselectable" id="division-chips">
+      <button type="button" data-division="all" class="div-chip lcars-btn px-3.5 py-1.5 bg-[#ff9900] text-black font-bold text-xs lcars-pill whitespace-nowrap shadow-sm">
         ALL FLEET
       </button>
-      <button data-division="Command" class="div-chip px-3 py-1.5 bg-[#1a0f0f] border border-[#cc3333] text-[#cc3333] hover:bg-[#cc3333] hover:text-black font-bold text-xs lcars-pill transition-all whitespace-nowrap active:scale-95">
+      <button type="button" data-division="Command" class="div-chip lcars-btn px-3 py-1.5 bg-[#1a0f0f] border border-[#cc3333] text-[#cc3333] font-bold text-xs lcars-pill whitespace-nowrap">
         COMMAND
       </button>
-      <button data-division="Operations" class="div-chip px-3 py-1.5 bg-[#1f190a] border border-[#ffaa00] text-[#ffaa00] hover:bg-[#ffaa00] hover:text-black font-bold text-xs lcars-pill transition-all whitespace-nowrap active:scale-95">
+      <button type="button" data-division="Operations" class="div-chip lcars-btn px-3 py-1.5 bg-[#1f190a] border border-[#ffaa00] text-[#ffaa00] font-bold text-xs lcars-pill whitespace-nowrap">
         OPERATIONS
       </button>
-      <button data-division="Sciences" class="div-chip px-3 py-1.5 bg-[#0a1624] border border-[#33bbff] text-[#33bbff] hover:bg-[#33bbff] hover:text-black font-bold text-xs lcars-pill transition-all whitespace-nowrap active:scale-95">
+      <button type="button" data-division="Sciences" class="div-chip lcars-btn px-3 py-1.5 bg-[#0a1624] border border-[#33bbff] text-[#33bbff] font-bold text-xs lcars-pill whitespace-nowrap">
         SCIENCES
       </button>
-      <button data-division="Medical" class="div-chip px-3 py-1.5 bg-[#190f1f] border border-[#cc99cc] text-[#cc99cc] hover:bg-[#cc99cc] hover:text-black font-bold text-xs lcars-pill transition-all whitespace-nowrap active:scale-95">
+      <button type="button" data-division="Medical" class="div-chip lcars-btn px-3 py-1.5 bg-[#190f1f] border border-[#cc99cc] text-[#cc99cc] font-bold text-xs lcars-pill whitespace-nowrap">
         MEDICAL
       </button>
-      <button data-division="Holodeck" class="div-chip px-3 py-1.5 bg-[#0d1c1a] border border-[#2df5a3] text-[#2df5a3] hover:bg-[#2df5a3] hover:text-black font-bold text-xs lcars-pill transition-all whitespace-nowrap active:scale-95">
+      <button type="button" data-division="Holodeck" class="div-chip lcars-btn px-3 py-1.5 bg-[#0d1c1a] border border-[#2df5a3] text-[#2df5a3] font-bold text-xs lcars-pill whitespace-nowrap">
         HOLODECK
       </button>
     </div>
 
-    <!-- STATUS BAR & METRICS -->
-    <div class="flex items-center justify-between bg-[#111116] border border-[#332211] p-1.5 mb-3 lcars-pill">
+    <!-- STATUS FILTER BAR & METRICS -->
+    <div class="flex items-center justify-between bg-[#111116] border border-[#332211] p-1.5 mb-3 lcars-pill unselectable">
       <div class="flex items-center gap-1 text-xs">
-        <button id="status-all" class="status-selector px-3 py-1 rounded-full bg-[#ff9900] text-black font-bold transition">LOGGED</button>
-        <button id="status-pending" class="status-selector px-3 py-1 rounded-full text-[#ffaa00] hover:text-white transition">ACTIVE</button>
-        <button id="status-completed" class="status-selector px-3 py-1 rounded-full text-[#ffaa00] hover:text-white transition">FULFILLED</button>
+        <button type="button" id="status-all" class="status-selector lcars-btn px-3 py-1 rounded-full bg-[#ff9900] text-black font-bold">ALL</button>
+        <button type="button" id="status-pending" class="status-selector lcars-btn px-3 py-1 rounded-full text-[#ffaa00]">ACTIVE</button>
+        <button type="button" id="status-completed" class="status-selector lcars-btn px-3 py-1 rounded-full text-[#ffaa00]">FULFILLED</button>
       </div>
       <div class="pr-2 font-mono-stardate text-xs text-[#33bbff] flex items-center gap-1.5">
         <span>PENDING:</span>
@@ -200,64 +237,87 @@
 
     <!-- DIRECTIVES LIST CONTAINER -->
     <div id="tasks-list" class="space-y-2">
-      <!-- Generated entries appear here -->
+      <!-- Directives will be dynamically inserted here -->
     </div>
 
     <!-- EMPTY LOG DISPLAY -->
-    <div id="empty-state" class="hidden text-center py-12 px-4 border border-dashed border-[#556677] rounded-3xl mt-4">
-      <div class="text-4xl text-[#ffaa00] mb-2 font-mono-stardate">000 // NO DIRECTIVES</div>
-      <p class="text-xs text-[#6688cc] font-mono-stardate uppercase">The subspace task queue is clear. Awaiting Commander input.</p>
+    <div id="empty-state" class="hidden text-center py-12 px-4 border border-dashed border-[#556677] rounded-2xl mt-4 unselectable">
+      <div class="text-3xl text-[#ffaa00] mb-2 font-mono-stardate">000 // LOG EMPTY</div>
+      <p class="text-xs text-[#6688cc] font-mono-stardate uppercase">Task queue cleared. Tap "Engage Directive" below to transmit a task.</p>
     </div>
   </main>
 
-  <!-- BOTTOM FLOATING ACTION BUTTON (ENGAGE NEW DIRECTIVE) -->
-  <div class="fixed bottom-4 right-4 z-40 max-w-xl">
-    <button id="open-terminal-sheet" class="lcars-btn h-14 px-5 rounded-full bg-[#ff9900] hover:bg-[#ffaa00] text-black font-extrabold text-sm flex items-center gap-2.5 shadow-[0_0_20px_rgba(255,153,0,0.4)] transition">
-      <i class="fa-solid fa-bolt text-base"></i>
-      <span>ENGAGE DIRECTIVE</span>
+  <!-- BOTTOM FLOATING ACTION BUTTON -->
+  <div class="fixed bottom-4 right-4 z-40 max-w-xl unselectable">
+    <button 
+      id="open-terminal-sheet" 
+      type="button" 
+      class="lcars-btn h-14 px-5 rounded-full bg-[#ff9900] hover:bg-[#ffaa00] text-black font-extrabold text-sm flex items-center gap-2.5 shadow-[0_0_20px_rgba(255,153,0,0.5)] border border-[#ffcc00]">
+      <i class="fa-solid fa-plus text-base pointer-events-none"></i>
+      <span class="pointer-events-none tracking-wider">ENGAGE DIRECTIVE</span>
     </button>
   </div>
 
-  <!-- LCARS MODAL OVERLAY -->
-  <div id="modal-overlay" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 opacity-0 pointer-events-none transition-opacity duration-200"></div>
+  <!-- LCARS BACKDROP OVERLAY -->
+  <div 
+    id="modal-overlay" 
+    class="fixed inset-0 bg-black/85 backdrop-blur-sm z-50 transition-opacity duration-200 opacity-0 pointer-events-none">
+  </div>
 
-  <!-- LCARS ENTRY SLIDE-UP TERMINAL -->
-  <div id="entry-sheet" class="fixed bottom-0 left-0 right-0 z-50 bg-black border-t-4 border-[#ff9900] p-4 transform translate-y-full transition-transform duration-300 max-w-xl mx-auto lcars-elbow-top">
-    <!-- Curved Header Bar -->
-    <div class="flex items-center justify-between mb-4 pb-2 border-b border-[#331100]">
+  <!-- LCARS ENTRY SLIDE-UP TERMINAL MODAL -->
+  <div 
+    id="entry-sheet" 
+    class="fixed bottom-0 left-0 right-0 z-50 bg-[#0a0a0f] border-t-4 border-[#ff9900] p-4 pb-6 transform translate-y-full transition-transform duration-300 max-w-xl mx-auto lcars-elbow-top shadow-2xl pointer-events-none">
+    
+    <!-- Modal Header -->
+    <div class="flex items-center justify-between mb-4 pb-2 border-b border-[#331100] unselectable">
       <div class="flex items-center gap-2">
-        <div class="w-4 h-6 bg-[#ff6666] rounded-l-full"></div>
-        <h2 class="text-base font-bold text-[#ff9900] tracking-wider">ENTER STARFLEET DIRECTIVE</h2>
+        <div class="w-3 h-5 bg-[#ff6666] rounded-l-full"></div>
+        <h2 class="text-sm sm:text-base font-bold text-[#ff9900] tracking-wider">TRANSMIT STARFLEET DIRECTIVE</h2>
       </div>
-      <button id="close-terminal-sheet" class="px-3 py-1 bg-[#cc3333] hover:bg-[#ff6666] text-black font-bold text-xs lcars-pill">
+      <button 
+        id="close-terminal-sheet" 
+        type="button" 
+        class="lcars-btn px-3 py-1.5 bg-[#cc3333] hover:bg-[#ff6666] text-black font-bold text-xs lcars-pill">
         ABORT [X]
       </button>
     </div>
 
-    <form id="directive-form" class="space-y-3.5">
-      <!-- Title -->
+    <!-- Creation Form -->
+    <form id="directive-form" class="space-y-3" novalidate>
+      <!-- Task Directive Title -->
       <div>
-        <label class="block text-xs font-bold text-[#ffaa00] mb-1">DIRECTIVE OBJECTIVE</label>
-        <input type="text" id="directive-title" required placeholder="e.g., Calibrate warp core plasma injectors..." class="w-full h-11 px-3.5 bg-[#111116] border-2 border-[#6688cc] text-[#ffcc00] placeholder-[#556677] font-mono-stardate text-sm rounded-lg focus:outline-none focus:border-[#ff9900]">
+        <label for="directive-title" class="block text-xs font-bold text-[#ffaa00] mb-1 font-mono-stardate">OBJECTIVE DIRECTIVE</label>
+        <input 
+          type="text" 
+          id="directive-title" 
+          required 
+          placeholder="e.g., Calibrate primary sensor array..." 
+          autocomplete="off"
+          class="w-full h-11 px-3 bg-[#16161f] border-2 border-[#6688cc] text-[#ffcc00] placeholder-[#556677] font-mono-stardate rounded-lg focus:outline-none focus:border-[#ff9900]">
       </div>
 
       <div class="grid grid-cols-2 gap-3">
         <!-- Division -->
         <div>
-          <label class="block text-xs font-bold text-[#ffaa00] mb-1">FLEET DIVISION</label>
-          <select id="directive-division" class="w-full h-10 px-2.5 bg-[#111116] border-2 border-[#6688cc] text-[#33bbff] font-mono-stardate text-xs rounded-lg focus:outline-none focus:border-[#ff9900]">
-            <option value="Command">COMMAND (RED)</option>
+          <label for="directive-division" class="block text-xs font-bold text-[#ffaa00] mb-1 font-mono-stardate">FLEET DIVISION</label>
+          <select 
+            id="directive-division" 
+            class="w-full h-11 px-2.5 bg-[#16161f] border-2 border-[#6688cc] text-[#33bbff] font-mono-stardate text-xs rounded-lg focus:outline-none focus:border-[#ff9900]">
             <option value="Operations" selected>OPERATIONS (GOLD)</option>
+            <option value="Command">COMMAND (RED)</option>
             <option value="Sciences">SCIENCES (BLUE)</option>
             <option value="Medical">MEDICAL (LILAC)</option>
             <option value="Holodeck">HOLODECK (GREEN)</option>
           </select>
         </div>
 
-        <!-- Alert Status -->
+        <!-- Alert Level -->
         <div>
-          <label class="block text-xs font-bold text-[#ffaa00] mb-1">ALERT CONDITION</label>
-          <select id="directive-alert" class="w-full h-10 px-2.5 bg-[#111116] border-2 border-[#6688cc] text-[#ff6666] font-mono-stardate text-xs rounded-lg focus:outline-none focus:border-[#ff9900]">
+          <label for="directive-alert" class="block text-xs font-bold text-[#ffaa00] mb-1 font-mono-stardate">ALERT STATUS</label>
+          <select 
+            id="directive-alert" 
+            class="w-full h-11 px-2.5 bg-[#16161f] border-2 border-[#6688cc] text-[#ff6666] font-mono-stardate text-xs rounded-lg focus:outline-none focus:border-[#ff9900]">
             <option value="Green">CONDITION GREEN</option>
             <option value="Yellow" selected>YELLOW ALERT</option>
             <option value="Red">RED ALERT</option>
@@ -265,26 +325,32 @@
         </div>
       </div>
 
-      <!-- Target Stardate / Due -->
+      <!-- Due Date -->
       <div>
-        <label class="block text-xs font-bold text-[#ffaa00] mb-1">DEADLINE / STARDATE (OPTIONAL)</label>
-        <input type="date" id="directive-date" class="w-full h-10 px-3 bg-[#111116] border-2 border-[#6688cc] text-[#ffaa00] font-mono-stardate text-xs rounded-lg focus:outline-none focus:border-[#ff9900]">
+        <label for="directive-date" class="block text-xs font-bold text-[#ffaa00] mb-1 font-mono-stardate">DEADLINE (OPTIONAL)</label>
+        <input 
+          type="date" 
+          id="directive-date" 
+          class="w-full h-11 px-3 bg-[#16161f] border-2 border-[#6688cc] text-[#ffaa00] font-mono-stardate text-xs rounded-lg focus:outline-none focus:border-[#ff9900]">
       </div>
 
       <!-- Submit button -->
       <div class="pt-2">
-        <button type="submit" class="lcars-btn w-full h-12 bg-[#ffaa00] hover:bg-[#ff9900] text-black font-extrabold text-sm lcars-pill flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(255,170,0,0.3)]">
-          <i class="fa-solid fa-terminal"></i>
-          <span>TRANSMIT DIRECTIVE TO LOG</span>
+        <button 
+          type="submit" 
+          id="submit-directive-btn"
+          class="lcars-btn w-full h-12 bg-[#ffaa00] hover:bg-[#ff9900] text-black font-extrabold text-sm lcars-pill flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(255,170,0,0.4)]">
+          <i class="fa-solid fa-terminal pointer-events-none"></i>
+          <span class="pointer-events-none tracking-wider">LOG DIRECTIVE</span>
         </button>
       </div>
     </form>
   </div>
 
-  <!-- AUDIO SYNTHESIZER AND LCARS CONTROLLER -->
+  <!-- JAVASCRIPT: SOUND SYNTHESIZER & TOUCH-READY LCARS LOGIC -->
   <script>
-    /* Starfleet Web Audio API Synth Engine for Authentic LCARS Chirps and Tones */
-    class LcarsAudio {
+    /* Audio Synthesizer for Authentic Starfleet Sounds */
+    class LcarsAudioEngine {
       constructor() {
         this.ctx = null;
         this.soundEnabled = true;
@@ -292,19 +358,21 @@
 
       init() {
         if (!this.ctx) {
-          const AudioContext = window.AudioContext || window.webkitAudioContext;
-          this.ctx = new AudioContext();
+          const AudioCtx = window.AudioContext || window.webkitAudioContext;
+          if (AudioCtx) {
+            this.ctx = new AudioCtx();
+          }
         }
         if (this.ctx && this.ctx.state === 'suspended') {
-          this.ctx.resume();
+          this.ctx.resume().catch(() => {});
         }
       }
 
-      // Authentic two-tone LCARS interface beep
       beep(f1 = 987.77, f2 = 1318.51, duration = 0.08) {
         if (!this.soundEnabled) return;
         try {
           this.init();
+          if (!this.ctx) return;
           const now = this.ctx.currentTime;
           
           const osc1 = this.ctx.createOscillator();
@@ -321,67 +389,65 @@
           const osc2 = this.ctx.createOscillator();
           const gain2 = this.ctx.createGain();
           osc2.type = 'sine';
-          osc2.frequency.setValueAtTime(f2, now + 0.04);
-          gain2.gain.setValueAtTime(0.08, now + 0.04);
-          gain2.gain.exponentialRampToValueAtTime(0.001, now + duration + 0.04);
+          osc2.frequency.setValueAtTime(f2, now + 0.03);
+          gain2.gain.setValueAtTime(0.08, now + 0.03);
+          gain2.gain.exponentialRampToValueAtTime(0.001, now + duration + 0.03);
           osc2.connect(gain2);
           gain2.connect(this.ctx.destination);
-          osc2.start(now + 0.04);
-          osc2.stop(now + duration + 0.04);
-        } catch (e) {
-          // Audio context might be restricted before user interaction
-        }
+          osc2.start(now + 0.03);
+          osc2.stop(now + duration + 0.03);
+        } catch (e) {}
       }
 
-      // Completed / Victory chime
       affirmative() {
         if (!this.soundEnabled) return;
         try {
           this.init();
-          const notes = [587.33, 880.00, 1174.66]; // D5, A5, D6
+          if (!this.ctx) return;
+          const notes = [587.33, 880.00, 1174.66];
           notes.forEach((freq, idx) => {
-            const now = this.ctx.currentTime + (idx * 0.07);
+            const now = this.ctx.currentTime + (idx * 0.06);
             const osc = this.ctx.createOscillator();
             const gain = this.ctx.createGain();
             osc.type = 'sine';
             osc.frequency.setValueAtTime(freq, now);
             gain.gain.setValueAtTime(0.07, now);
-            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
             osc.connect(gain);
             gain.connect(this.ctx.destination);
             osc.start(now);
-            osc.stop(now + 0.18);
+            osc.stop(now + 0.15);
           });
-        } catch(e) {}
+        } catch (e) {}
       }
 
-      // Red alert purge / delete tone
       purge() {
         if (!this.soundEnabled) return;
         try {
           this.init();
+          if (!this.ctx) return;
           const now = this.ctx.currentTime;
           const osc = this.ctx.createOscillator();
           const gain = this.ctx.createGain();
           osc.type = 'sawtooth';
-          osc.frequency.setValueAtTime(329.63, now); // E4
-          osc.frequency.exponentialRampToValueAtTime(164.81, now + 0.18);
+          osc.frequency.setValueAtTime(329.63, now);
+          osc.frequency.exponentialRampToValueAtTime(130.81, now + 0.16);
           gain.gain.setValueAtTime(0.06, now);
-          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.16);
           osc.connect(gain);
           gain.connect(this.ctx.destination);
           osc.start(now);
-          osc.stop(now + 0.18);
-        } catch(e) {}
+          osc.stop(now + 0.16);
+        } catch (e) {}
       }
     }
 
-    const sound = new LcarsAudio();
+    const sound = new LcarsAudioEngine();
 
     // Haptic vibration helper
     function triggerHaptic(pattern = [15]) {
-      if ('vibrate' in navigator) {
-        try { navigator.vibrate(pattern); } catch(e) {}
+      if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+        try { navigator.vibrate(pattern); } catch (e) {}
       }
     }
 
@@ -391,107 +457,87 @@
     let currentStatus = 'all'; // all, active, completed
     let searchQuery = '';
 
-    // DOM ELEMENTS
+    // DOM REFERENCES
     const tasksList = document.getElementById('tasks-list');
     const emptyState = document.getElementById('empty-state');
     const pendingCounter = document.getElementById('pending-counter');
     const stardateClock = document.getElementById('stardate-clock');
     const lcarsSearch = document.getElementById('lcars-search');
     const clearSearchBtn = document.getElementById('clear-search-btn');
-    const refreshOrderBtn = document.getElementById('refresh-order-btn');
+    const sortBtn = document.getElementById('sort-btn');
     const soundToggleBtn = document.getElementById('sound-toggle-btn');
     const soundIcon = document.getElementById('sound-icon');
 
-    // SHEET MODAL ELEMENTS
+    // MODAL REFERENCES
     const openSheetBtn = document.getElementById('open-terminal-sheet');
     const closeSheetBtn = document.getElementById('close-terminal-sheet');
     const entrySheet = document.getElementById('entry-sheet');
     const modalOverlay = document.getElementById('modal-overlay');
     const directiveForm = document.getElementById('directive-form');
+    const directiveTitle = document.getElementById('directive-title');
 
-    // LIVE STARDATE CALCULATION
-    // Trek-standard approximation: based on current year/epoch
+    // LIVE STARDATE
     function updateStardate() {
       const now = new Date();
       const startOfYear = new Date(now.getFullYear(), 0, 1);
       const dayOfYear = (now - startOfYear) / 86400000;
-      const year = now.getFullYear();
-      // Generates genuine TNG era formatted stardate: e.g. 58241.3
-      const stardateVal = ((year - 2323) * 1000 + (dayOfYear / 365.25) * 1000).toFixed(1);
+      const stardateVal = ((now.getFullYear() - 2323) * 1000 + (dayOfYear / 365.25) * 1000).toFixed(1);
       stardateClock.textContent = `STARDATE ${stardateVal}`;
     }
     setInterval(updateStardate, 5000);
     updateStardate();
 
-    // COLOR DEFINITIONS FOR DIVISIONS & ALERTS
+    // COLOR STYLES FOR DIVISIONS
     function getDivisionStyles(div) {
       switch(div) {
         case 'Command':
-          return {
-            bar: 'bg-[#cc3333]',
-            text: 'text-[#cc3333]',
-            border: 'border-[#cc3333]',
-            tag: 'CMD'
-          };
+          return { bar: 'bg-[#cc3333]', text: 'text-[#cc3333]', border: 'border-[#cc3333]', tag: 'CMD' };
         case 'Sciences':
-          return {
-            bar: 'bg-[#33bbff]',
-            text: 'text-[#33bbff]',
-            border: 'border-[#33bbff]',
-            tag: 'SCI'
-          };
+          return { bar: 'bg-[#33bbff]', text: 'text-[#33bbff]', border: 'border-[#33bbff]', tag: 'SCI' };
         case 'Medical':
-          return {
-            bar: 'bg-[#cc99cc]',
-            text: 'text-[#cc99cc]',
-            border: 'border-[#cc99cc]',
-            tag: 'MED'
-          };
+          return { bar: 'bg-[#cc99cc]', text: 'text-[#cc99cc]', border: 'border-[#cc99cc]', tag: 'MED' };
         case 'Holodeck':
-          return {
-            bar: 'bg-[#2df5a3]',
-            text: 'text-[#2df5a3]',
-            border: 'border-[#2df5a3]',
-            tag: 'HOLO'
-          };
+          return { bar: 'bg-[#2df5a3]', text: 'text-[#2df5a3]', border: 'border-[#2df5a3]', tag: 'HOLO' };
         case 'Operations':
         default:
-          return {
-            bar: 'bg-[#ffaa00]',
-            text: 'text-[#ffaa00]',
-            border: 'border-[#ffaa00]',
-            tag: 'OPS'
-          };
+          return { bar: 'bg-[#ffaa00]', text: 'text-[#ffaa00]', border: 'border-[#ffaa00]', tag: 'OPS' };
       }
     }
 
     function getAlertBadge(alert) {
       switch(alert) {
         case 'Red':
-          return `<span class="px-2 py-0.5 rounded bg-[#cc3333]/20 border border-[#cc3333] text-[#cc3333] text-[10px] font-bold tracking-wider animate-pulse">RED ALERT</span>`;
+          return `<span class="px-2 py-0.5 rounded bg-[#cc3333]/25 border border-[#cc3333] text-[#cc3333] text-[10px] font-bold">RED ALERT</span>`;
         case 'Yellow':
-          return `<span class="px-2 py-0.5 rounded bg-[#ffaa00]/20 border border-[#ffaa00] text-[#ffaa00] text-[10px] font-bold tracking-wider">YELLOW ALERT</span>`;
+          return `<span class="px-2 py-0.5 rounded bg-[#ffaa00]/25 border border-[#ffaa00] text-[#ffaa00] text-[10px] font-bold">YELLOW ALERT</span>`;
         case 'Green':
         default:
-          return `<span class="px-2 py-0.5 rounded bg-[#33bbff]/20 border border-[#33bbff] text-[#33bbff] text-[10px] font-bold tracking-wider">COND GREEN</span>`;
+          return `<span class="px-2 py-0.5 rounded bg-[#33bbff]/25 border border-[#33bbff] text-[#33bbff] text-[10px] font-bold">COND GREEN</span>`;
       }
     }
 
-    // INITIALIZATION & LOCALSTORAGE
+    function escapeHtml(str) {
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
+
+    // INITIALIZATION & PERSISTENCE
     function initLCARS() {
-      const stored = localStorage.getItem('lcars_starfleet_directives');
+      const stored = localStorage.getItem('lcars_starfleet_directives_v2');
       if (stored) {
         try {
           directives = JSON.parse(stored);
-        } catch(e) {
+        } catch (e) {
           directives = [];
         }
-      } else {
-        // Authentic sample directives for immediate mission readiness
+      }
+
+      if (!directives || directives.length === 0) {
         directives = [
           {
-            id: 'LCARS-101',
-            title: 'Recalibrate magnetic constrictors in Warp Nacelle B',
+            id: 'SEC-419',
+            title: 'Recalibrate warp core plasma injectors',
             division: 'Operations',
             alert: 'Yellow',
             dueDate: '',
@@ -499,8 +545,8 @@
             timestamp: Date.now()
           },
           {
-            id: 'LCARS-102',
-            title: 'Sensor sweep of Sector 001 for temporal anomalies',
+            id: 'SEC-802',
+            title: 'Conduct subspace sensor telemetry sweep of Sector 001',
             division: 'Sciences',
             alert: 'Red',
             dueDate: '',
@@ -508,8 +554,8 @@
             timestamp: Date.now() - 3600000
           },
           {
-            id: 'LCARS-103',
-            title: 'Replicate Raktajino & conduct daily crew checkups',
+            id: 'SEC-105',
+            title: 'Distribute daily hyposprays and replicate Raktajino',
             division: 'Medical',
             alert: 'Green',
             dueDate: '',
@@ -518,17 +564,17 @@
           }
         ];
         saveDirectives();
+      } else {
+        renderDirectives();
       }
-
-      renderDirectives();
     }
 
     function saveDirectives() {
-      localStorage.setItem('lcars_starfleet_directives', JSON.stringify(directives));
+      localStorage.setItem('lcars_starfleet_directives_v2', JSON.stringify(directives));
       renderDirectives();
     }
 
-    // RENDER TASKS WITH LCARS ARCHITECTURE
+    // RENDER TASKS LIST
     function renderDirectives() {
       const filtered = directives.filter(task => {
         if (currentStatus === 'active' && task.completed) return false;
@@ -536,9 +582,9 @@
         if (currentDivision !== 'all' && task.division !== currentDivision) return false;
         if (searchQuery.trim() !== '') {
           const q = searchQuery.toLowerCase();
-          const matchTitle = task.title.toLowerCase().includes(q);
-          const matchDiv = task.division.toLowerCase().includes(q);
-          const matchId = task.id.toLowerCase().includes(q);
+          const matchTitle = (task.title || '').toLowerCase().includes(q);
+          const matchDiv = (task.division || '').toLowerCase().includes(q);
+          const matchId = (task.id || '').toLowerCase().includes(q);
           if (!matchTitle && !matchDiv && !matchId) return false;
         }
         return true;
@@ -558,35 +604,37 @@
           const divStyle = getDivisionStyles(task.division);
           const item = document.createElement('div');
           
-          item.className = `group flex items-stretch gap-1.5 transition-all duration-150 ${task.completed ? 'opacity-50' : 'opacity-100'}`;
-
-          const toggleButton = `
-            <button data-id="${task.id}" class="toggle-task-btn w-12 ${task.completed ? 'bg-[#556677] text-[#111116]' : divStyle.bar + ' text-black'} font-extrabold text-xs lcars-pill-left flex items-center justify-center transition active:brightness-125" title="${task.completed ? 'Reactivate Directive' : 'Mark Fulfilled'}">
-              ${task.completed ? '<i class="fa-solid fa-check text-sm"></i>' : divStyle.tag}
-            </button>
-          `;
-
-          const purgeButton = `
-            <button data-id="${task.id}" class="delete-task-btn w-10 bg-[#331111] hover:bg-[#cc3333] text-[#cc3333] hover:text-black font-bold text-xs lcars-pill-right flex items-center justify-center transition" title="Purge Directive">
-              <i class="fa-solid fa-trash-can text-xs"></i>
-            </button>
-          `;
+          item.className = `flex items-stretch gap-1.5 transition-opacity duration-150 ${task.completed ? 'opacity-50' : 'opacity-100'}`;
 
           item.innerHTML = `
-            ${toggleButton}
-            <div class="flex-1 bg-[#111116] border-y border-r border-[#222233] p-2.5 flex flex-col justify-between">
-              <div class="flex items-start justify-between gap-2">
-                <p class="text-sm font-semibold tracking-wide ${task.completed ? 'line-through text-[#667788]' : 'text-[#ffddaa]'} break-words">
-                  ${escapeHtml(task.title)}
-                </p>
-              </div>
+            <button 
+              type="button" 
+              data-action="toggle" 
+              data-id="${task.id}" 
+              class="lcars-btn w-12 sm:w-14 ${task.completed ? 'bg-[#445566] text-black' : divStyle.bar + ' text-black'} font-extrabold text-xs lcars-pill-left flex items-center justify-center p-2 flex-shrink-0"
+              title="${task.completed ? 'Reactivate' : 'Fulfill'}">
+              <span class="pointer-events-none font-bold">${task.completed ? '✓' : divStyle.tag}</span>
+            </button>
+
+            <div class="flex-1 bg-[#111116] border border-[#222233] p-2.5 flex flex-col justify-between overflow-hidden">
+              <p class="text-sm font-semibold tracking-wide ${task.completed ? 'line-through text-[#667788]' : 'text-[#ffddaa]'} break-words">
+                ${escapeHtml(task.title)}
+              </p>
               <div class="flex flex-wrap items-center gap-2 mt-2 font-mono-stardate text-xs">
-                <span class="text-[#ff9900] text-[11px] font-bold">[${task.id}]</span>
+                <span class="text-[#ff9900] font-bold">[${task.id}]</span>
                 ${getAlertBadge(task.alert)}
-                ${task.dueDate ? `<span class="text-[#6688cc] text-[11px]"><i class="fa-regular fa-clock mr-1"></i>${task.dueDate}</span>` : ''}
+                ${task.dueDate ? `<span class="text-[#6688cc]"><i class="fa-regular fa-clock mr-1 pointer-events-none"></i>${task.dueDate}</span>` : ''}
               </div>
             </div>
-            ${purgeButton}
+
+            <button 
+              type="button" 
+              data-action="delete" 
+              data-id="${task.id}" 
+              class="lcars-btn w-11 bg-[#250d0d] hover:bg-[#cc3333] text-[#cc3333] hover:text-black font-bold text-xs lcars-pill-right flex items-center justify-center flex-shrink-0" 
+              title="Purge Task">
+              <i class="fa-solid fa-trash-can text-xs pointer-events-none"></i>
+            </button>
           `;
 
           tasksList.appendChild(item);
@@ -594,38 +642,31 @@
       }
     }
 
-    function escapeHtml(str) {
-      const div = document.createElement('div');
-      div.textContent = str;
-      return div.innerHTML;
-    }
-
-    // TASK TOGGLE & PURGE CLICK EVENTS
+    // DIRECTIVE ACTIONS (TOGGLE / PURGE)
     tasksList.addEventListener('click', (e) => {
-      const toggleBtn = e.target.closest('.toggle-task-btn');
-      const deleteBtn = e.target.closest('.delete-task-btn');
+      const btn = e.target.closest('button[data-action]');
+      if (!btn) return;
 
-      if (toggleBtn) {
-        const id = toggleBtn.dataset.id;
+      const action = btn.dataset.action;
+      const id = btn.dataset.id;
+
+      if (action === 'toggle') {
         directives = directives.map(t => {
           if (t.id === id) {
-            const nextState = !t.completed;
-            if (nextState) {
+            const next = !t.completed;
+            if (next) {
               sound.affirmative();
-              triggerHaptic([30, 40, 30]);
+              triggerHaptic([35, 35]);
             } else {
               sound.beep(880, 659.25, 0.08);
               triggerHaptic([20]);
             }
-            return { ...t, completed: nextState };
+            return { ...t, completed: next };
           }
           return t;
         });
         saveDirectives();
-      }
-
-      if (deleteBtn) {
-        const id = deleteBtn.dataset.id;
+      } else if (action === 'delete') {
         sound.purge();
         triggerHaptic([50]);
         directives = directives.filter(t => t.id !== id);
@@ -633,19 +674,24 @@
       }
     });
 
-    // OPEN / CLOSE TERMINAL SHEET
+    // OPEN / CLOSE SLIDE-UP MODAL (Fixing Pointer-Events blocking)
     function openModal() {
       sound.beep(1046.50, 1318.51, 0.09);
       triggerHaptic([15]);
+
       modalOverlay.classList.remove('opacity-0', 'pointer-events-none');
-      entrySheet.classList.remove('translate-y-full');
-      setTimeout(() => document.getElementById('directive-title').focus(), 150);
+      entrySheet.classList.remove('translate-y-full', 'pointer-events-none');
+
+      setTimeout(() => {
+        directiveTitle.focus();
+      }, 200);
     }
 
     function closeModal() {
       sound.beep(659.25, 523.25, 0.08);
       modalOverlay.classList.add('opacity-0', 'pointer-events-none');
-      entrySheet.classList.add('translate-y-full');
+      entrySheet.classList.add('translate-y-full', 'pointer-events-none');
+      directiveForm.reset();
     }
 
     openSheetBtn.addEventListener('click', openModal);
@@ -655,21 +701,23 @@
     // FORM SUBMISSION (TRANSMIT DIRECTIVE)
     directiveForm.addEventListener('submit', (e) => {
       e.preventDefault();
-      const titleInput = document.getElementById('directive-title');
-      const divisionInput = document.getElementById('directive-division');
-      const alertInput = document.getElementById('directive-alert');
-      const dateInput = document.getElementById('directive-date');
+      const title = directiveTitle.value.trim();
+      if (!title) {
+        directiveTitle.focus();
+        return;
+      }
 
-      const title = titleInput.value.trim();
-      if (!title) return;
+      const division = document.getElementById('directive-division').value;
+      const alert = document.getElementById('directive-alert').value;
+      const date = document.getElementById('directive-date').value;
 
-      const randomSectorCode = Math.floor(100 + Math.random() * 900);
+      const randomSec = Math.floor(100 + Math.random() * 900);
       const newDirective = {
-        id: `SEC-${randomSectorCode}`,
+        id: `SEC-${randomSec}`,
         title: title,
-        division: divisionInput.value,
-        alert: alertInput.value,
-        dueDate: dateInput.value,
+        division: division,
+        alert: alert,
+        dueDate: date,
         completed: false,
         timestamp: Date.now()
       };
@@ -680,10 +728,9 @@
       directives.unshift(newDirective);
       saveDirectives();
       closeModal();
-      directiveForm.reset();
     });
 
-    // SEARCH LISTENER
+    // SEARCH INPUT HANDLING
     lcarsSearch.addEventListener('input', (e) => {
       searchQuery = e.target.value;
       clearSearchBtn.classList.toggle('hidden', !searchQuery);
@@ -696,16 +743,18 @@
       searchQuery = '';
       clearSearchBtn.classList.add('hidden');
       renderDirectives();
+      lcarsSearch.focus();
     });
 
-    refreshOrderBtn.addEventListener('click', () => {
+    // SORT BUTTON
+    sortBtn.addEventListener('click', () => {
       sound.beep(1318.51, 1567.98, 0.08);
-      triggerHaptic([20]);
-      directives.sort((a, b) => b.timestamp - a.timestamp);
+      triggerHaptic([25]);
+      directives.sort((a, b) => Number(a.completed) - Number(b.completed) || b.timestamp - a.timestamp);
       renderDirectives();
     });
 
-    // DIVISION CHIPS FILTERING
+    // DIVISION FILTER PILLS
     document.querySelectorAll('.div-chip').forEach(btn => {
       btn.addEventListener('click', () => {
         sound.beep(1174.66, 1318.51, 0.06);
@@ -713,41 +762,44 @@
 
         document.querySelectorAll('.div-chip').forEach(b => {
           b.classList.remove('bg-[#ff9900]', 'text-black');
-          b.classList.add('bg-[#111116]');
+          b.classList.add('text-[#ffaa00]');
         });
 
         btn.classList.add('bg-[#ff9900]', 'text-black');
-        btn.classList.remove('bg-[#111116]');
+        btn.classList.remove('text-[#ffaa00]');
 
         currentDivision = btn.dataset.division;
         renderDirectives();
       });
     });
 
-    // STATUS SELECTORS (ALL / PENDING / COMPLETED)
+    // STATUS BUTTONS (ALL / ACTIVE / FULFILLED)
     const statusAll = document.getElementById('status-all');
     const statusPending = document.getElementById('status-pending');
     const statusCompleted = document.getElementById('status-completed');
-    const allStatuses = [statusAll, statusPending, statusCompleted];
+    const statusButtons = [statusAll, statusPending, statusCompleted];
 
-    function setStatusFilter(activeEl, status) {
+    function setStatus(activeBtn, status) {
       sound.beep(1046.50, 1174.66, 0.06);
       triggerHaptic([15]);
-      allStatuses.forEach(s => {
-        s.classList.remove('bg-[#ff9900]', 'text-black', 'font-bold');
-        s.classList.add('text-[#ffaa00]');
+
+      statusButtons.forEach(b => {
+        b.classList.remove('bg-[#ff9900]', 'text-black', 'font-bold');
+        b.classList.add('text-[#ffaa00]');
       });
-      activeEl.classList.add('bg-[#ff9900]', 'text-black', 'font-bold');
-      activeEl.classList.remove('text-[#ffaa00]');
+
+      activeBtn.classList.add('bg-[#ff9900]', 'text-black', 'font-bold');
+      activeBtn.classList.remove('text-[#ffaa00]');
+
       currentStatus = status;
       renderDirectives();
     }
 
-    statusAll.addEventListener('click', () => setStatusFilter(statusAll, 'all'));
-    statusPending.addEventListener('click', () => setStatusFilter(statusPending, 'active'));
-    statusCompleted.addEventListener('click', () => setStatusFilter(statusCompleted, 'completed'));
+    statusAll.addEventListener('click', () => setStatus(statusAll, 'all'));
+    statusPending.addEventListener('click', () => setStatus(statusPending, 'active'));
+    statusCompleted.addEventListener('click', () => setStatus(statusCompleted, 'completed'));
 
-    // SOUND MUTE TOGGLE
+    // AUDIO ON/OFF TOGGLE
     soundToggleBtn.addEventListener('click', () => {
       sound.soundEnabled = !sound.soundEnabled;
       if (sound.soundEnabled) {
@@ -761,7 +813,16 @@
       }
     });
 
-    // INITIALIZE TERMINAL
+    // Unlock Web Audio on first user touch / tap
+    const unlockAudio = () => {
+      sound.init();
+      window.removeEventListener('click', unlockAudio);
+      window.removeEventListener('touchstart', unlockAudio);
+    };
+    window.addEventListener('click', unlockAudio, { passive: true });
+    window.addEventListener('touchstart', unlockAudio, { passive: true });
+
+    // Boot up
     window.addEventListener('DOMContentLoaded', initLCARS);
   </script>
 </body>
