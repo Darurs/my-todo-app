@@ -1,115 +1,49 @@
 <!DOCTYPE html>
-<html lang="en" class="h-full bg-black">
+<html lang="en" class="h-full">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <meta name="theme-color" content="#000000">
-  <meta name="description" content="Starfleet LCARS Terminal - Mission Directive & Task Management Interface">
+  <meta name="theme-color" content="#6366f1" id="theme-color-meta">
+  <meta name="description" content="A clean, modern Android Material Design inspired To-Do app with offline storage.">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>LCARS 47 // TASK DIRECTIVES</title>
-
-  <!-- Tailwind CSS & Icons -->
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <title>Material Task - Android Web To-Do</title>
+  
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Antonio:wght@400;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#eef2ff',
+              100: '#e0e7ff',
+              500: '#6366f1',
+              600: '#4f46e5',
+              700: '#4338ca',
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'Roboto', 'system-ui', '-apple-system', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
 
   <style>
-    :root {
-      --lcars-orange: #ff9900;
-      --lcars-amber: #ffaa00;
-      --lcars-peach: #ff9966;
-      --lcars-salmon: #ff6666;
-      --lcars-red: #cc3333;
-      --lcars-lilac: #cc99cc;
-      --lcars-violet: #9977aa;
-      --lcars-sky: #6688cc;
-      --lcars-cyan: #33bbff;
-      --lcars-gold: #ffcc00;
-      --lcars-gray: #445566;
-    }
-
+    /* Material Design smooth transitions and mobile tap improvements */
     * {
-      box-sizing: border-box;
-      -webkit-tap-highlight-color: rgba(255, 153, 0, 0.2);
-    }
-
-    body {
-      background-color: #000000;
-      color: #ff9900;
-      font-family: 'Antonio', 'Arial Narrow', sans-serif;
-      letter-spacing: 0.05em;
-      text-transform: uppercase;
-      overflow-x: hidden;
-    }
-
-    /* Keep font readable and mono for Stardates & technical indicators */
-    .font-mono-stardate {
-      font-family: 'Share Tech Mono', monospace;
-      letter-spacing: 0.08em;
-    }
-
-    /* LCARS architectural curves */
-    .lcars-elbow-top {
-      border-top-left-radius: 26px;
-      border-bottom-left-radius: 0;
-    }
-    .lcars-pill-left {
-      border-top-left-radius: 9999px;
-      border-bottom-left-radius: 9999px;
-    }
-    .lcars-pill-right {
-      border-top-right-radius: 9999px;
-      border-bottom-right-radius: 9999px;
-    }
-    .lcars-pill {
-      border-radius: 9999px;
-    }
-
-    /* Subtle LCARS scanline effect that strictly allows all touch/click through */
-    .scanlines-overlay {
-      position: fixed;
-      inset: 0;
-      background: linear-gradient(
-        to bottom,
-        rgba(255,255,255,0),
-        rgba(255,255,255,0) 50%,
-        rgba(0, 0, 0, 0.28) 51%,
-        rgba(0, 0, 0, 0.28)
-      );
-      background-size: 100% 4px;
-      pointer-events: none !important;
-      z-index: 30;
-    }
-
-    /* Prevent text selection only on graphic controls, never on inputs */
-    .unselectable {
-      -webkit-user-select: none;
+      -webkit-tap-highlight-color: transparent;
       user-select: none;
     }
-
-    /* Tactile button active states */
-    .lcars-btn {
-      touch-action: manipulation;
-      cursor: pointer;
+    input, textarea, select {
+      user-select: auto;
     }
-    .lcars-btn:active {
-      filter: brightness(1.3);
-      transform: scale(0.97);
-    }
-
-    /* Text input overrides for mobile keyboard usability */
-    input, select, textarea {
-      text-transform: none;
-      -webkit-user-select: auto !important;
-      user-select: auto !important;
-      touch-action: auto !important;
-      font-size: 16px !important; /* Prevents auto-zoom on iOS & Android */
-    }
-
     .scrollbar-none::-webkit-scrollbar {
       display: none;
     }
@@ -117,402 +51,415 @@
       -ms-overflow-style: none;
       scrollbar-width: none;
     }
+    .ripple {
+      position: relative;
+      overflow: hidden;
+    }
+    @keyframes checkmarkPop {
+      0% { transform: scale(0.7); opacity: 0; }
+      50% { transform: scale(1.2); }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    .animate-pop {
+      animation: checkmarkPop 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    }
   </style>
 </head>
 
-<body class="h-full flex flex-col justify-between min-h-screen text-slate-100 relative">
+<body class="h-full bg-slate-100 text-slate-900 dark:bg-slate-950 dark:text-slate-100 transition-colors duration-200 antialiased font-sans flex flex-col justify-between">
 
-  <!-- Scanline CRT atmospheric backdrop (Non-blocking) -->
-  <div class="scanlines-overlay"></div>
-
-  <!-- TOP LCARS HEADER & ARCH -->
-  <header class="w-full bg-black pt-2 px-2 pb-1 border-b border-[#331100] relative z-10 unselectable">
-    <div class="max-w-xl mx-auto">
-      
-      <!-- Stardate and system status line -->
-      <div class="flex items-center justify-between text-xs font-mono-stardate text-[#ff9900] px-1 pb-1">
-        <div class="flex items-center gap-2">
-          <span class="inline-block w-2.5 h-2.5 rounded-full bg-[#33bbff] animate-pulse"></span>
-          <span>SYS-47 // USS ENTERPRISE</span>
+  <header class="sticky top-0 z-30 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-4 pt-3 pb-3">
+    <div class="max-w-md mx-auto flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 rounded-2xl bg-brand-500 text-white flex items-center justify-center shadow-md shadow-brand-500/30">
+          <i class="fa-solid fa-check-double text-lg"></i>
         </div>
-        <div id="stardate-clock" class="text-[#ffaa00] font-bold tracking-wider">
-          STARDATE 102456.8
+        <div>
+          <h1 class="text-lg font-bold tracking-tight text-slate-800 dark:text-slate-100 leading-tight">My Tasks</h1>
+          <p id="today-date-display" class="text-xs text-slate-500 dark:text-slate-400 font-medium">Loading...</p>
         </div>
       </div>
-
-      <!-- Main LCARS Top Header Graphic Elbow -->
-      <div class="flex items-stretch gap-1.5 h-12">
-        <!-- Curved Upper-Left Elbow -->
-        <div class="w-24 bg-[#ff9900] lcars-elbow-top flex items-end justify-end p-1.5 text-black font-bold text-xs tracking-tighter">
-          LCARS 47
-        </div>
-        
-        <!-- Center Banner -->
-        <div class="flex-1 bg-[#ff9966] flex items-center justify-between px-3 text-black font-extrabold text-base sm:text-lg tracking-wider">
-          <span>TASK DIRECTIVES</span>
-          <span class="text-xs tracking-widest font-mono-stardate hidden sm:inline">DECK-10</span>
-        </div>
-
-        <!-- Audio mute toggle button -->
-        <button id="sound-toggle-btn" type="button" class="lcars-btn w-12 bg-[#cc99cc] text-black font-bold text-xs flex items-center justify-center lcars-pill-right" title="Toggle LCARS Audio">
-          <i id="sound-icon" class="fa-solid fa-volume-high text-sm pointer-events-none"></i>
+      <div class="flex items-center space-x-1">
+        <button id="pwa-help-btn" class="p-2.5 rounded-full text-slate-500 hover:text-brand-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" title="Add to Home Screen">
+          <i class="fa-solid fa-mobile-screen-button text-lg"></i>
         </button>
-      </div>
-
-      <!-- Secondary LCARS strip -->
-      <div class="flex items-center gap-1.5 mt-1">
-        <div class="w-24 h-3 bg-[#6688cc]"></div>
-        <div class="flex-1 h-3 bg-[#cc99cc]"></div>
-        <div class="w-16 h-3 bg-[#ffaa00] rounded-r-full"></div>
+        <button id="theme-toggle-btn" class="p-2.5 rounded-full text-slate-500 hover:text-amber-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" title="Toggle Theme">
+          <i id="theme-icon" class="fa-solid fa-moon text-lg"></i>
+        </button>
       </div>
     </div>
   </header>
 
-  <!-- MAIN TERMINAL CONTENT -->
-  <main class="flex-1 max-w-xl w-full mx-auto p-3 pb-28 overflow-y-auto relative z-10">
-
-    <!-- Search Directive Interface -->
-    <div class="flex items-stretch gap-1.5 mb-3">
-      <div class="w-14 bg-[#ff6666] text-black font-bold text-xs flex items-center justify-center lcars-pill-left unselectable">
-        SRCH
-      </div>
-      <div class="flex-1 relative">
-        <input 
-          type="text" 
-          id="lcars-search" 
-          placeholder="Filter directives or ID..." 
-          autocomplete="off"
-          class="w-full h-11 px-3 bg-[#111116] border-2 border-[#ff9900] text-[#33bbff] placeholder-[#6688cc] font-mono-stardate rounded-none focus:outline-none focus:border-[#ffaa00]">
-        
-        <button 
-          type="button" 
-          id="clear-search-btn" 
-          class="hidden absolute right-3 top-1/2 -translate-y-1/2 text-[#ff6666] hover:text-[#ffaa00] p-2 lcars-btn">
-          <i class="fa-solid fa-xmark text-sm pointer-events-none"></i>
-        </button>
-      </div>
-      <button 
-        type="button" 
-        id="sort-btn" 
-        class="lcars-btn w-12 bg-[#ffaa00] text-black font-bold text-xs flex items-center justify-center lcars-pill-right" 
-        title="Sort Directives">
-        <i class="fa-solid fa-arrow-down-wide-short pointer-events-none"></i>
+  <main class="flex-1 max-w-md w-full mx-auto p-4 pb-28 overflow-y-auto">
+    
+    <!-- Quick Search Bar -->
+    <div class="relative mb-3">
+      <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+      <input type="text" id="search-input" placeholder="Search tasks..." class="w-full pl-10 pr-10 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 text-slate-800 dark:text-slate-100 placeholder-slate-400 shadow-sm transition">
+      <button id="clear-search-btn" class="hidden absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+        <i class="fa-solid fa-xmark text-sm"></i>
       </button>
     </div>
 
-    <!-- STARFLEET DIVISION FILTER CHIPS -->
-    <div class="flex items-center gap-1.5 overflow-x-auto pb-2 scrollbar-none mb-3 unselectable" id="division-chips">
-      <button type="button" data-division="all" class="div-chip lcars-btn px-3.5 py-1.5 bg-[#ff9900] text-black font-bold text-xs lcars-pill whitespace-nowrap shadow-sm">
-        ALL FLEET
+    <!-- Category Filter Chips -->
+    <div class="flex items-center space-x-2 overflow-x-auto pb-2 scrollbar-none mb-3" id="category-chips">
+      <button data-category="all" class="category-chip px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap bg-brand-500 text-white shadow-sm shadow-brand-500/20 transition-transform active:scale-95">
+        All
       </button>
-      <button type="button" data-division="Command" class="div-chip lcars-btn px-3 py-1.5 bg-[#1a0f0f] border border-[#cc3333] text-[#cc3333] font-bold text-xs lcars-pill whitespace-nowrap">
-        COMMAND
+      <button data-category="Personal" class="category-chip px-3.5 py-1.5 rounded-full text-xs font-medium whitespace-nowrap bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800 hover:bg-slate-50 transition-transform active:scale-95">
+        <i class="fa-solid fa-user text-purple-500 mr-1"></i> Personal
       </button>
-      <button type="button" data-division="Operations" class="div-chip lcars-btn px-3 py-1.5 bg-[#1f190a] border border-[#ffaa00] text-[#ffaa00] font-bold text-xs lcars-pill whitespace-nowrap">
-        OPERATIONS
+      <button data-category="Work" class="category-chip px-3.5 py-1.5 rounded-full text-xs font-medium whitespace-nowrap bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800 hover:bg-slate-50 transition-transform active:scale-95">
+        <i class="fa-solid fa-briefcase text-blue-500 mr-1"></i> Work
       </button>
-      <button type="button" data-division="Sciences" class="div-chip lcars-btn px-3 py-1.5 bg-[#0a1624] border border-[#33bbff] text-[#33bbff] font-bold text-xs lcars-pill whitespace-nowrap">
-        SCIENCES
+      <button data-category="Shopping" class="category-chip px-3.5 py-1.5 rounded-full text-xs font-medium whitespace-nowrap bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800 hover:bg-slate-50 transition-transform active:scale-95">
+        <i class="fa-solid fa-cart-shopping text-emerald-500 mr-1"></i> Shopping
       </button>
-      <button type="button" data-division="Medical" class="div-chip lcars-btn px-3 py-1.5 bg-[#190f1f] border border-[#cc99cc] text-[#cc99cc] font-bold text-xs lcars-pill whitespace-nowrap">
-        MEDICAL
-      </button>
-      <button type="button" data-division="Holodeck" class="div-chip lcars-btn px-3 py-1.5 bg-[#0d1c1a] border border-[#2df5a3] text-[#2df5a3] font-bold text-xs lcars-pill whitespace-nowrap">
-        HOLODECK
+      <button data-category="Fitness" class="category-chip px-3.5 py-1.5 rounded-full text-xs font-medium whitespace-nowrap bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800 hover:bg-slate-50 transition-transform active:scale-95">
+        <i class="fa-solid fa-heart-pulse text-rose-500 mr-1"></i> Fitness
       </button>
     </div>
 
-    <!-- STATUS FILTER BAR & METRICS -->
-    <div class="flex items-center justify-between bg-[#111116] border border-[#332211] p-1.5 mb-3 lcars-pill unselectable">
-      <div class="flex items-center gap-1 text-xs">
-        <button type="button" id="status-all" class="status-selector lcars-btn px-3 py-1 rounded-full bg-[#ff9900] text-black font-bold">ALL</button>
-        <button type="button" id="status-pending" class="status-selector lcars-btn px-3 py-1 rounded-full text-[#ffaa00]">ACTIVE</button>
-        <button type="button" id="status-completed" class="status-selector lcars-btn px-3 py-1 rounded-full text-[#ffaa00]">FULFILLED</button>
+    <!-- Status Filter & Counter -->
+    <div class="flex items-center justify-between mb-3 px-1">
+      <div class="flex items-center bg-slate-200/70 dark:bg-slate-800/80 p-1 rounded-xl text-xs font-medium">
+        <button id="filter-all" class="status-btn px-2.5 py-1 rounded-lg bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 shadow-sm transition">All</button>
+        <button id="filter-active" class="status-btn px-2.5 py-1 rounded-lg text-slate-600 dark:text-slate-400 hover:text-slate-900 transition">Active</button>
+        <button id="filter-done" class="status-btn px-2.5 py-1 rounded-lg text-slate-600 dark:text-slate-400 hover:text-slate-900 transition">Completed</button>
       </div>
-      <div class="pr-2 font-mono-stardate text-xs text-[#33bbff] flex items-center gap-1.5">
-        <span>PENDING:</span>
-        <span id="pending-counter" class="font-bold text-[#ff9966]">0</span>
+      <span id="task-stats" class="text-xs text-slate-500 dark:text-slate-400 font-medium">0 remaining</span>
+    </div>
+
+    <!-- Task List Container -->
+    <div id="tasks-container" class="space-y-2.5">
+      <!-- Dynamically generated items -->
+    </div>
+
+    <!-- Empty State -->
+    <div id="empty-state" class="hidden text-center py-16 px-4">
+      <div class="w-16 h-16 rounded-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center mx-auto text-slate-400 text-2xl mb-3">
+        <i class="fa-regular fa-clipboard"></i>
       </div>
-    </div>
-
-    <!-- DIRECTIVES LIST CONTAINER -->
-    <div id="tasks-list" class="space-y-2">
-      <!-- Directives will be dynamically inserted here -->
-    </div>
-
-    <!-- EMPTY LOG DISPLAY -->
-    <div id="empty-state" class="hidden text-center py-12 px-4 border border-dashed border-[#556677] rounded-2xl mt-4 unselectable">
-      <div class="text-3xl text-[#ffaa00] mb-2 font-mono-stardate">000 // LOG EMPTY</div>
-      <p class="text-xs text-[#6688cc] font-mono-stardate uppercase">Task queue cleared. Tap "Engage Directive" below to transmit a task.</p>
+      <h3 class="text-base font-semibold text-slate-700 dark:text-slate-300">No tasks found</h3>
+      <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Tap the plus button below to create your first task!</p>
     </div>
   </main>
 
-  <!-- BOTTOM FLOATING ACTION BUTTON -->
-  <div class="fixed bottom-4 right-4 z-40 max-w-xl unselectable">
-    <button 
-      id="open-terminal-sheet" 
-      type="button" 
-      class="lcars-btn h-14 px-5 rounded-full bg-[#ff9900] hover:bg-[#ffaa00] text-black font-extrabold text-sm flex items-center gap-2.5 shadow-[0_0_20px_rgba(255,153,0,0.5)] border border-[#ffcc00]">
-      <i class="fa-solid fa-plus text-base pointer-events-none"></i>
-      <span class="pointer-events-none tracking-wider">ENGAGE DIRECTIVE</span>
+  <div class="fixed bottom-6 right-6 z-40 max-w-md">
+    <button id="open-sheet-btn" class="w-14 h-14 rounded-full bg-brand-500 hover:bg-brand-600 active:scale-95 text-white flex items-center justify-center shadow-lg shadow-brand-500/40 transition-transform duration-150 focus:outline-none" aria-label="Add task">
+      <i class="fa-solid fa-plus text-xl"></i>
     </button>
   </div>
 
-  <!-- LCARS BACKDROP OVERLAY -->
-  <div 
-    id="modal-overlay" 
-    class="fixed inset-0 bg-black/85 backdrop-blur-sm z-50 transition-opacity duration-200 opacity-0 pointer-events-none">
-  </div>
+  <div id="sheet-overlay" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 opacity-0 pointer-events-none transition-opacity duration-200"></div>
 
-  <!-- LCARS ENTRY SLIDE-UP TERMINAL MODAL -->
-  <div 
-    id="entry-sheet" 
-    class="fixed bottom-0 left-0 right-0 z-50 bg-[#0a0a0f] border-t-4 border-[#ff9900] p-4 pb-6 transform translate-y-full transition-transform duration-300 max-w-xl mx-auto lcars-elbow-top shadow-2xl pointer-events-none">
-    
-    <!-- Modal Header -->
-    <div class="flex items-center justify-between mb-4 pb-2 border-b border-[#331100] unselectable">
-      <div class="flex items-center gap-2">
-        <div class="w-3 h-5 bg-[#ff6666] rounded-l-full"></div>
-        <h2 class="text-sm sm:text-base font-bold text-[#ff9900] tracking-wider">TRANSMIT STARFLEET DIRECTIVE</h2>
-      </div>
-      <button 
-        id="close-terminal-sheet" 
-        type="button" 
-        class="lcars-btn px-3 py-1.5 bg-[#cc3333] hover:bg-[#ff6666] text-black font-bold text-xs lcars-pill">
-        ABORT [X]
+  <div id="bottom-sheet" class="fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-slate-900 rounded-t-3xl p-5 shadow-2xl border-t border-slate-200 dark:border-slate-800 transform translate-y-full transition-transform duration-300 max-w-md mx-auto">
+    <!-- Drag handle -->
+    <div class="w-10 h-1.5 bg-slate-300 dark:bg-slate-700 rounded-full mx-auto mb-4"></div>
+
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="text-base font-bold text-slate-800 dark:text-slate-100">Add New Task</h2>
+      <button id="close-sheet-btn" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1">
+        <i class="fa-solid fa-xmark text-lg"></i>
       </button>
     </div>
 
-    <!-- Creation Form -->
-    <form id="directive-form" class="space-y-3" novalidate>
-      <!-- Task Directive Title -->
+    <form id="add-task-form" class="space-y-4">
       <div>
-        <label for="directive-title" class="block text-xs font-bold text-[#ffaa00] mb-1 font-mono-stardate">OBJECTIVE DIRECTIVE</label>
-        <input 
-          type="text" 
-          id="directive-title" 
-          required 
-          placeholder="e.g., Calibrate primary sensor array..." 
-          autocomplete="off"
-          class="w-full h-11 px-3 bg-[#16161f] border-2 border-[#6688cc] text-[#ffcc00] placeholder-[#556677] font-mono-stardate rounded-lg focus:outline-none focus:border-[#ff9900]">
+        <label for="task-title" class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">TASK TITLE</label>
+        <input type="text" id="task-title" required placeholder="What do you want to accomplish?" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 text-slate-800 dark:text-slate-100">
       </div>
 
       <div class="grid grid-cols-2 gap-3">
-        <!-- Division -->
         <div>
-          <label for="directive-division" class="block text-xs font-bold text-[#ffaa00] mb-1 font-mono-stardate">FLEET DIVISION</label>
-          <select 
-            id="directive-division" 
-            class="w-full h-11 px-2.5 bg-[#16161f] border-2 border-[#6688cc] text-[#33bbff] font-mono-stardate text-xs rounded-lg focus:outline-none focus:border-[#ff9900]">
-            <option value="Operations" selected>OPERATIONS (GOLD)</option>
-            <option value="Command">COMMAND (RED)</option>
-            <option value="Sciences">SCIENCES (BLUE)</option>
-            <option value="Medical">MEDICAL (LILAC)</option>
-            <option value="Holodeck">HOLODECK (GREEN)</option>
+          <label for="task-category" class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">CATEGORY</label>
+          <select id="task-category" class="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 text-slate-800 dark:text-slate-100">
+            <option value="Personal">Personal</option>
+            <option value="Work">Work</option>
+            <option value="Shopping">Shopping</option>
+            <option value="Fitness">Fitness</option>
           </select>
         </div>
 
-        <!-- Alert Level -->
         <div>
-          <label for="directive-alert" class="block text-xs font-bold text-[#ffaa00] mb-1 font-mono-stardate">ALERT STATUS</label>
-          <select 
-            id="directive-alert" 
-            class="w-full h-11 px-2.5 bg-[#16161f] border-2 border-[#6688cc] text-[#ff6666] font-mono-stardate text-xs rounded-lg focus:outline-none focus:border-[#ff9900]">
-            <option value="Green">CONDITION GREEN</option>
-            <option value="Yellow" selected>YELLOW ALERT</option>
-            <option value="Red">RED ALERT</option>
+          <label for="task-priority" class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">PRIORITY</label>
+          <select id="task-priority" class="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 text-slate-800 dark:text-slate-100">
+            <option value="Low">🟢 Low</option>
+            <option value="Medium" selected>🟡 Medium</option>
+            <option value="High">🔴 High</option>
           </select>
         </div>
       </div>
 
-      <!-- Due Date -->
       <div>
-        <label for="directive-date" class="block text-xs font-bold text-[#ffaa00] mb-1 font-mono-stardate">DEADLINE (OPTIONAL)</label>
-        <input 
-          type="date" 
-          id="directive-date" 
-          class="w-full h-11 px-3 bg-[#16161f] border-2 border-[#6688cc] text-[#ffaa00] font-mono-stardate text-xs rounded-lg focus:outline-none focus:border-[#ff9900]">
+        <label for="task-due-date" class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">DUE DATE (OPTIONAL)</label>
+        <input type="date" id="task-due-date" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 text-slate-800 dark:text-slate-100">
       </div>
 
-      <!-- Submit button -->
-      <div class="pt-2">
-        <button 
-          type="submit" 
-          id="submit-directive-btn"
-          class="lcars-btn w-full h-12 bg-[#ffaa00] hover:bg-[#ff9900] text-black font-extrabold text-sm lcars-pill flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(255,170,0,0.4)]">
-          <i class="fa-solid fa-terminal pointer-events-none"></i>
-          <span class="pointer-events-none tracking-wider">LOG DIRECTIVE</span>
-        </button>
-      </div>
+      <button type="submit" class="w-full py-3 bg-brand-500 hover:bg-brand-600 active:scale-[0.98] text-white font-medium rounded-xl text-sm shadow-md shadow-brand-500/30 transition">
+        Save Task
+      </button>
     </form>
   </div>
 
-  <!-- JAVASCRIPT: SOUND SYNTHESIZER & TOUCH-READY LCARS LOGIC -->
+  <div id="pwa-modal-overlay" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white dark:bg-slate-900 w-full max-w-sm rounded-3xl p-5 shadow-2xl border border-slate-200 dark:border-slate-800">
+      <div class="flex items-center justify-between mb-3">
+        <h3 class="font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+          <i class="fa-brands fa-android text-emerald-500 text-xl"></i>
+          Install on Android
+        </h3>
+        <button id="close-pwa-modal-btn" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+      <p class="text-xs text-slate-500 dark:text-slate-400 mb-4">
+        You can turn this web page into a real fullscreen app on your Android phone in 3 simple taps:
+      </p>
+
+      <ol class="text-xs space-y-2.5 text-slate-600 dark:text-slate-300 mb-5">
+        <li class="flex items-start gap-2">
+          <span class="font-bold text-brand-500 bg-brand-50 dark:bg-brand-900/30 px-2 py-0.5 rounded-full">1</span>
+          <span>Open this link in <strong>Chrome</strong> on your Android phone.</span>
+        </li>
+        <li class="flex items-start gap-2">
+          <span class="font-bold text-brand-500 bg-brand-50 dark:bg-brand-900/30 px-2 py-0.5 rounded-full">2</span>
+          <span>Tap the <strong>three dots (⋮)</strong> menu in the upper-right corner.</span>
+        </li>
+        <li class="flex items-start gap-2">
+          <span class="font-bold text-brand-500 bg-brand-50 dark:bg-brand-900/30 px-2 py-0.5 rounded-full">3</span>
+          <span>Select <strong>"Add to Home screen"</strong> or <strong>"Install app"</strong>.</span>
+        </li>
+      </ol>
+
+      <div class="bg-slate-50 dark:bg-slate-800 p-3 rounded-xl flex items-center justify-between mb-4 border border-slate-200 dark:border-slate-700">
+        <div class="text-xs text-slate-500 truncate mr-2" id="share-link-text">window.location.href</div>
+        <button id="copy-link-btn" class="text-xs px-2.5 py-1.5 bg-brand-500 text-white rounded-lg active:scale-95 font-medium whitespace-nowrap">
+          Copy Link
+        </button>
+      </div>
+
+      <button id="got-it-btn" class="w-full py-2.5 bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-semibold rounded-xl transition">
+        Got it!
+      </button>
+    </div>
+  </div>
+
+  <!-- Notification Toast -->
+  <div id="toast" class="fixed top-5 left-1/2 -translate-x-1/2 z-50 bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-xs font-medium px-4 py-2 rounded-full shadow-lg opacity-0 pointer-events-none transition-all duration-300 -translate-y-4">
+    Task saved
+  </div>
+
   <script>
-    /* Audio Synthesizer for Authentic Starfleet Sounds */
-    class LcarsAudioEngine {
-      constructor() {
-        this.ctx = null;
-        this.soundEnabled = true;
-      }
-
-      init() {
-        if (!this.ctx) {
-          const AudioCtx = window.AudioContext || window.webkitAudioContext;
-          if (AudioCtx) {
-            this.ctx = new AudioCtx();
-          }
-        }
-        if (this.ctx && this.ctx.state === 'suspended') {
-          this.ctx.resume().catch(() => {});
-        }
-      }
-
-      beep(f1 = 987.77, f2 = 1318.51, duration = 0.08) {
-        if (!this.soundEnabled) return;
-        try {
-          this.init();
-          if (!this.ctx) return;
-          const now = this.ctx.currentTime;
-          
-          const osc1 = this.ctx.createOscillator();
-          const gain1 = this.ctx.createGain();
-          osc1.type = 'sine';
-          osc1.frequency.setValueAtTime(f1, now);
-          gain1.gain.setValueAtTime(0.08, now);
-          gain1.gain.exponentialRampToValueAtTime(0.001, now + duration);
-          osc1.connect(gain1);
-          gain1.connect(this.ctx.destination);
-          osc1.start(now);
-          osc1.stop(now + duration);
-
-          const osc2 = this.ctx.createOscillator();
-          const gain2 = this.ctx.createGain();
-          osc2.type = 'sine';
-          osc2.frequency.setValueAtTime(f2, now + 0.03);
-          gain2.gain.setValueAtTime(0.08, now + 0.03);
-          gain2.gain.exponentialRampToValueAtTime(0.001, now + duration + 0.03);
-          osc2.connect(gain2);
-          gain2.connect(this.ctx.destination);
-          osc2.start(now + 0.03);
-          osc2.stop(now + duration + 0.03);
-        } catch (e) {}
-      }
-
-      affirmative() {
-        if (!this.soundEnabled) return;
-        try {
-          this.init();
-          if (!this.ctx) return;
-          const notes = [587.33, 880.00, 1174.66];
-          notes.forEach((freq, idx) => {
-            const now = this.ctx.currentTime + (idx * 0.06);
-            const osc = this.ctx.createOscillator();
-            const gain = this.ctx.createGain();
-            osc.type = 'sine';
-            osc.frequency.setValueAtTime(freq, now);
-            gain.gain.setValueAtTime(0.07, now);
-            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
-            osc.connect(gain);
-            gain.connect(this.ctx.destination);
-            osc.start(now);
-            osc.stop(now + 0.15);
-          });
-        } catch (e) {}
-      }
-
-      purge() {
-        if (!this.soundEnabled) return;
-        try {
-          this.init();
-          if (!this.ctx) return;
-          const now = this.ctx.currentTime;
-          const osc = this.ctx.createOscillator();
-          const gain = this.ctx.createGain();
-          osc.type = 'sawtooth';
-          osc.frequency.setValueAtTime(329.63, now);
-          osc.frequency.exponentialRampToValueAtTime(130.81, now + 0.16);
-          gain.gain.setValueAtTime(0.06, now);
-          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.16);
-          osc.connect(gain);
-          gain.connect(this.ctx.destination);
-          osc.start(now);
-          osc.stop(now + 0.16);
-        } catch (e) {}
-      }
-    }
-
-    const sound = new LcarsAudioEngine();
-
-    // Haptic vibration helper
-    function triggerHaptic(pattern = [15]) {
-      if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
-        try { navigator.vibrate(pattern); } catch (e) {}
-      }
-    }
-
-    // STATE VARIABLES
-    let directives = [];
-    let currentDivision = 'all';
-    let currentStatus = 'all'; // all, active, completed
+    // State Variables
+    let tasks = [];
+    let currentFilter = 'all'; // all, active, done
+    let currentCategory = 'all';
     let searchQuery = '';
 
-    // DOM REFERENCES
-    const tasksList = document.getElementById('tasks-list');
+    // Elements
+    const tasksContainer = document.getElementById('tasks-container');
     const emptyState = document.getElementById('empty-state');
-    const pendingCounter = document.getElementById('pending-counter');
-    const stardateClock = document.getElementById('stardate-clock');
-    const lcarsSearch = document.getElementById('lcars-search');
+    const taskStats = document.getElementById('task-stats');
+    const searchInput = document.getElementById('search-input');
     const clearSearchBtn = document.getElementById('clear-search-btn');
-    const sortBtn = document.getElementById('sort-btn');
-    const soundToggleBtn = document.getElementById('sound-toggle-btn');
-    const soundIcon = document.getElementById('sound-icon');
+    const todayDateDisplay = document.getElementById('today-date-display');
+    const themeToggleBtn = document.getElementById('theme-toggle-btn');
+    const themeIcon = document.getElementById('theme-icon');
+    const toast = document.getElementById('toast');
 
-    // MODAL REFERENCES
-    const openSheetBtn = document.getElementById('open-terminal-sheet');
-    const closeSheetBtn = document.getElementById('close-terminal-sheet');
-    const entrySheet = document.getElementById('entry-sheet');
-    const modalOverlay = document.getElementById('modal-overlay');
-    const directiveForm = document.getElementById('directive-form');
-    const directiveTitle = document.getElementById('directive-title');
+    // Bottom sheet elements
+    const openSheetBtn = document.getElementById('open-sheet-btn');
+    const closeSheetBtn = document.getElementById('close-sheet-btn');
+    const bottomSheet = document.getElementById('bottom-sheet');
+    const sheetOverlay = document.getElementById('sheet-overlay');
+    const addTaskForm = document.getElementById('add-task-form');
 
-    // LIVE STARDATE
-    function updateStardate() {
-      const now = new Date();
-      const startOfYear = new Date(now.getFullYear(), 0, 1);
-      const dayOfYear = (now - startOfYear) / 86400000;
-      const stardateVal = ((now.getFullYear() - 2323) * 1000 + (dayOfYear / 365.25) * 1000).toFixed(1);
-      stardateClock.textContent = `STARDATE ${stardateVal}`;
+    // PWA Modal elements
+    const pwaHelpBtn = document.getElementById('pwa-help-btn');
+    const pwaModalOverlay = document.getElementById('pwa-modal-overlay');
+    const closePwaModalBtn = document.getElementById('close-pwa-modal-btn');
+    const gotItBtn = document.getElementById('got-it-btn');
+    const copyLinkBtn = document.getElementById('copy-link-btn');
+    const shareLinkText = document.getElementById('share-link-text');
+
+    function initApp() {
+      // Set current date
+      const options = { weekday: 'short', month: 'short', day: 'numeric' };
+      todayDateDisplay.textContent = new Date().toLocaleDateString(undefined, options);
+
+      // Load tasks from localStorage
+      const savedTasks = localStorage.getItem('android_todo_tasks');
+      if (savedTasks) {
+        try {
+          tasks = JSON.parse(savedTasks);
+        } catch (e) {
+          tasks = [];
+        }
+      } else {
+        // Starter sample tasks for beginner friendly experience
+        tasks = [
+          {
+            id: '1',
+            title: 'Welcome to your Android To-Do app! 📱',
+            category: 'Personal',
+            priority: 'High',
+            dueDate: '',
+            completed: false,
+            createdAt: Date.now()
+          },
+          {
+            id: '2',
+            title: 'Add this app to your Android home screen',
+            category: 'Work',
+            priority: 'Medium',
+            dueDate: '',
+            completed: false,
+            createdAt: Date.now() - 10000
+          },
+          {
+            id: '3',
+            title: 'Tap the checkmark circle to mark tasks complete',
+            category: 'Shopping',
+            priority: 'Low',
+            dueDate: '',
+            completed: true,
+            createdAt: Date.now() - 20000
+          }
+        ];
+        saveTasks();
+      }
+
+      // Initialize theme
+      initTheme();
+
+      // Render tasks
+      renderTasks();
+
+      // Set link in PWA helper
+      shareLinkText.textContent = window.location.href;
     }
-    setInterval(updateStardate, 5000);
-    updateStardate();
 
-    // COLOR STYLES FOR DIVISIONS
-    function getDivisionStyles(div) {
-      switch(div) {
-        case 'Command':
-          return { bar: 'bg-[#cc3333]', text: 'text-[#cc3333]', border: 'border-[#cc3333]', tag: 'CMD' };
-        case 'Sciences':
-          return { bar: 'bg-[#33bbff]', text: 'text-[#33bbff]', border: 'border-[#33bbff]', tag: 'SCI' };
-        case 'Medical':
-          return { bar: 'bg-[#cc99cc]', text: 'text-[#cc99cc]', border: 'border-[#cc99cc]', tag: 'MED' };
-        case 'Holodeck':
-          return { bar: 'bg-[#2df5a3]', text: 'text-[#2df5a3]', border: 'border-[#2df5a3]', tag: 'HOLO' };
-        case 'Operations':
-        default:
-          return { bar: 'bg-[#ffaa00]', text: 'text-[#ffaa00]', border: 'border-[#ffaa00]', tag: 'OPS' };
+    function saveTasks() {
+      localStorage.setItem('android_todo_tasks', JSON.stringify(tasks));
+      renderTasks();
+    }
+
+    function initTheme() {
+      const savedTheme = localStorage.getItem('android_todo_theme');
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+      if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+        document.documentElement.classList.add('dark');
+        themeIcon.classList.replace('fa-moon', 'fa-sun');
+      } else {
+        document.documentElement.classList.remove('dark');
+        themeIcon.classList.replace('fa-sun', 'fa-moon');
       }
     }
 
-    function getAlertBadge(alert) {
-      switch(alert) {
-        case 'Red':
-          return `<span class="px-2 py-0.5 rounded bg-[#cc3333]/25 border border-[#cc3333] text-[#cc3333] text-[10px] font-bold">RED ALERT</span>`;
-        case 'Yellow':
-          return `<span class="px-2 py-0.5 rounded bg-[#ffaa00]/25 border border-[#ffaa00] text-[#ffaa00] text-[10px] font-bold">YELLOW ALERT</span>`;
-        case 'Green':
-        default:
-          return `<span class="px-2 py-0.5 rounded bg-[#33bbff]/25 border border-[#33bbff] text-[#33bbff] text-[10px] font-bold">COND GREEN</span>`;
+    themeToggleBtn.addEventListener('click', () => {
+      const isDark = document.documentElement.classList.toggle('dark');
+      if (isDark) {
+        localStorage.setItem('android_todo_theme', 'dark');
+        themeIcon.classList.replace('fa-moon', 'fa-sun');
+      } else {
+        localStorage.setItem('android_todo_theme', 'light');
+        themeIcon.classList.replace('fa-sun', 'fa-moon');
+      }
+    });
+
+    function getPriorityBadge(priority) {
+      if (priority === 'High') {
+        return `<span class="text-[10px] px-2 py-0.5 rounded-full bg-rose-50 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400 font-semibold border border-rose-200 dark:border-rose-800">High</span>`;
+      } else if (priority === 'Medium') {
+        return `<span class="text-[10px] px-2 py-0.5 rounded-full bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 font-semibold border border-amber-200 dark:border-amber-800">Med</span>`;
+      } else {
+        return `<span class="text-[10px] px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-medium">Low</span>`;
+      }
+    }
+
+    function getCategoryIcon(category) {
+      switch(category) {
+        case 'Work': return `<i class="fa-solid fa-briefcase text-blue-500 mr-1"></i>`;
+        case 'Shopping': return `<i class="fa-solid fa-cart-shopping text-emerald-500 mr-1"></i>`;
+        case 'Fitness': return `<i class="fa-solid fa-heart-pulse text-rose-500 mr-1"></i>`;
+        default: return `<i class="fa-solid fa-user text-purple-500 mr-1"></i>`;
+      }
+    }
+
+    function renderTasks() {
+      // Filter logic
+      const filtered = tasks.filter(task => {
+        // Status filter
+        if (currentFilter === 'active' && task.completed) return false;
+        if (currentFilter === 'done' && !task.completed) return false;
+
+        // Category filter
+        if (currentCategory !== 'all' && task.category !== currentCategory) return false;
+
+        // Search query
+        if (searchQuery.trim() !== '') {
+          const matchTitle = task.title.toLowerCase().includes(searchQuery.toLowerCase());
+          const matchCat = task.category.toLowerCase().includes(searchQuery.toLowerCase());
+          if (!matchTitle && !matchCat) return false;
+        }
+
+        return true;
+      });
+
+      // Update remaining count
+      const remainingCount = tasks.filter(t => !t.completed).length;
+      taskStats.textContent = `${remainingCount} left`;
+
+      // Clear container
+      tasksContainer.innerHTML = '';
+
+      if (filtered.length === 0) {
+        emptyState.classList.remove('hidden');
+      } else {
+        emptyState.classList.add('hidden');
+        filtered.forEach(task => {
+          const card = document.createElement('div');
+          card.className = `group bg-white dark:bg-slate-900 border ${task.completed ? 'border-slate-200 dark:border-slate-800/60 opacity-65' : 'border-slate-200 dark:border-slate-800 shadow-sm'} rounded-2xl p-3.5 flex items-start justify-between gap-3 transition-all duration-200 hover:shadow-md`;
+
+          const checkIcon = task.completed
+            ? `<i class="fa-solid fa-check text-white text-xs animate-pop"></i>`
+            : '';
+
+          const checkBg = task.completed
+            ? `bg-brand-500 border-brand-500`
+            : `border-slate-300 dark:border-slate-600 hover:border-brand-500 bg-slate-50 dark:bg-slate-800`;
+
+          const dateDisplay = task.dueDate 
+            ? `<span class="text-[11px] text-slate-400 dark:text-slate-500 flex items-center gap-1"><i class="fa-regular fa-calendar text-[10px]"></i> ${task.dueDate}</span>` 
+            : '';
+
+          card.innerHTML = `
+            <div class="flex items-start gap-3 flex-1 min-w-0">
+              <button data-id="${task.id}" class="toggle-task-btn mt-0.5 w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-colors ${checkBg}">
+                ${checkIcon}
+              </button>
+              <div class="flex-1 min-w-0">
+                <p class="text-sm font-medium ${task.completed ? 'line-through text-slate-400 dark:text-slate-500' : 'text-slate-800 dark:text-slate-100'} break-words">
+                  ${escapeHtml(task.title)}
+                </p>
+                <div class="flex flex-wrap items-center gap-2 mt-1.5">
+                  <span class="text-[11px] text-slate-500 dark:text-slate-400 font-medium flex items-center">
+                    ${getCategoryIcon(task.category)} ${task.category}
+                  </span>
+                  ${getPriorityBadge(task.priority)}
+                  ${dateDisplay}
+                </div>
+              </div>
+            </div>
+            <button data-id="${task.id}" class="delete-task-btn text-slate-300 hover:text-rose-500 dark:text-slate-600 dark:hover:text-rose-400 p-1.5 transition-colors" title="Delete task">
+              <i class="fa-regular fa-trash-can text-sm"></i>
+            </button>
+          `;
+
+          tasksContainer.appendChild(card);
+        });
       }
     }
 
@@ -522,308 +469,158 @@
       return div.innerHTML;
     }
 
-    // INITIALIZATION & PERSISTENCE
-    function initLCARS() {
-      const stored = localStorage.getItem('lcars_starfleet_directives_v2');
-      if (stored) {
-        try {
-          directives = JSON.parse(stored);
-        } catch (e) {
-          directives = [];
-        }
+    tasksContainer.addEventListener('click', (e) => {
+      const toggleBtn = e.target.closest('.toggle-task-btn');
+      const deleteBtn = e.target.closest('.delete-task-btn');
+
+      if (toggleBtn) {
+        const id = toggleBtn.dataset.id;
+        tasks = tasks.map(t => t.id === id ? { ...t, completed: !t.completed } : t);
+        saveTasks();
+        showToast('Task updated');
       }
 
-      if (!directives || directives.length === 0) {
-        directives = [
-          {
-            id: 'SEC-419',
-            title: 'Recalibrate warp core plasma injectors',
-            division: 'Operations',
-            alert: 'Yellow',
-            dueDate: '',
-            completed: false,
-            timestamp: Date.now()
-          },
-          {
-            id: 'SEC-802',
-            title: 'Conduct subspace sensor telemetry sweep of Sector 001',
-            division: 'Sciences',
-            alert: 'Red',
-            dueDate: '',
-            completed: false,
-            timestamp: Date.now() - 3600000
-          },
-          {
-            id: 'SEC-105',
-            title: 'Distribute daily hyposprays and replicate Raktajino',
-            division: 'Medical',
-            alert: 'Green',
-            dueDate: '',
-            completed: true,
-            timestamp: Date.now() - 7200000
-          }
-        ];
-        saveDirectives();
-      } else {
-        renderDirectives();
-      }
-    }
-
-    function saveDirectives() {
-      localStorage.setItem('lcars_starfleet_directives_v2', JSON.stringify(directives));
-      renderDirectives();
-    }
-
-    // RENDER TASKS LIST
-    function renderDirectives() {
-      const filtered = directives.filter(task => {
-        if (currentStatus === 'active' && task.completed) return false;
-        if (currentStatus === 'completed' && !task.completed) return false;
-        if (currentDivision !== 'all' && task.division !== currentDivision) return false;
-        if (searchQuery.trim() !== '') {
-          const q = searchQuery.toLowerCase();
-          const matchTitle = (task.title || '').toLowerCase().includes(q);
-          const matchDiv = (task.division || '').toLowerCase().includes(q);
-          const matchId = (task.id || '').toLowerCase().includes(q);
-          if (!matchTitle && !matchDiv && !matchId) return false;
-        }
-        return true;
-      });
-
-      // Update counters
-      const pendingCount = directives.filter(t => !t.completed).length;
-      pendingCounter.textContent = pendingCount;
-
-      tasksList.innerHTML = '';
-
-      if (filtered.length === 0) {
-        emptyState.classList.remove('hidden');
-      } else {
-        emptyState.classList.add('hidden');
-        filtered.forEach(task => {
-          const divStyle = getDivisionStyles(task.division);
-          const item = document.createElement('div');
-          
-          item.className = `flex items-stretch gap-1.5 transition-opacity duration-150 ${task.completed ? 'opacity-50' : 'opacity-100'}`;
-
-          item.innerHTML = `
-            <button 
-              type="button" 
-              data-action="toggle" 
-              data-id="${task.id}" 
-              class="lcars-btn w-12 sm:w-14 ${task.completed ? 'bg-[#445566] text-black' : divStyle.bar + ' text-black'} font-extrabold text-xs lcars-pill-left flex items-center justify-center p-2 flex-shrink-0"
-              title="${task.completed ? 'Reactivate' : 'Fulfill'}">
-              <span class="pointer-events-none font-bold">${task.completed ? '✓' : divStyle.tag}</span>
-            </button>
-
-            <div class="flex-1 bg-[#111116] border border-[#222233] p-2.5 flex flex-col justify-between overflow-hidden">
-              <p class="text-sm font-semibold tracking-wide ${task.completed ? 'line-through text-[#667788]' : 'text-[#ffddaa]'} break-words">
-                ${escapeHtml(task.title)}
-              </p>
-              <div class="flex flex-wrap items-center gap-2 mt-2 font-mono-stardate text-xs">
-                <span class="text-[#ff9900] font-bold">[${task.id}]</span>
-                ${getAlertBadge(task.alert)}
-                ${task.dueDate ? `<span class="text-[#6688cc]"><i class="fa-regular fa-clock mr-1 pointer-events-none"></i>${task.dueDate}</span>` : ''}
-              </div>
-            </div>
-
-            <button 
-              type="button" 
-              data-action="delete" 
-              data-id="${task.id}" 
-              class="lcars-btn w-11 bg-[#250d0d] hover:bg-[#cc3333] text-[#cc3333] hover:text-black font-bold text-xs lcars-pill-right flex items-center justify-center flex-shrink-0" 
-              title="Purge Task">
-              <i class="fa-solid fa-trash-can text-xs pointer-events-none"></i>
-            </button>
-          `;
-
-          tasksList.appendChild(item);
-        });
-      }
-    }
-
-    // DIRECTIVE ACTIONS (TOGGLE / PURGE)
-    tasksList.addEventListener('click', (e) => {
-      const btn = e.target.closest('button[data-action]');
-      if (!btn) return;
-
-      const action = btn.dataset.action;
-      const id = btn.dataset.id;
-
-      if (action === 'toggle') {
-        directives = directives.map(t => {
-          if (t.id === id) {
-            const next = !t.completed;
-            if (next) {
-              sound.affirmative();
-              triggerHaptic([35, 35]);
-            } else {
-              sound.beep(880, 659.25, 0.08);
-              triggerHaptic([20]);
-            }
-            return { ...t, completed: next };
-          }
-          return t;
-        });
-        saveDirectives();
-      } else if (action === 'delete') {
-        sound.purge();
-        triggerHaptic([50]);
-        directives = directives.filter(t => t.id !== id);
-        saveDirectives();
+      if (deleteBtn) {
+        const id = deleteBtn.dataset.id;
+        tasks = tasks.filter(t => t.id !== id);
+        saveTasks();
+        showToast('Task deleted');
       }
     });
 
-    // OPEN / CLOSE SLIDE-UP MODAL (Fixing Pointer-Events blocking)
-    function openModal() {
-      sound.beep(1046.50, 1318.51, 0.09);
-      triggerHaptic([15]);
-
-      modalOverlay.classList.remove('opacity-0', 'pointer-events-none');
-      entrySheet.classList.remove('translate-y-full', 'pointer-events-none');
-
-      setTimeout(() => {
-        directiveTitle.focus();
-      }, 200);
-    }
-
-    function closeModal() {
-      sound.beep(659.25, 523.25, 0.08);
-      modalOverlay.classList.add('opacity-0', 'pointer-events-none');
-      entrySheet.classList.add('translate-y-full', 'pointer-events-none');
-      directiveForm.reset();
-    }
-
-    openSheetBtn.addEventListener('click', openModal);
-    closeSheetBtn.addEventListener('click', closeModal);
-    modalOverlay.addEventListener('click', closeModal);
-
-    // FORM SUBMISSION (TRANSMIT DIRECTIVE)
-    directiveForm.addEventListener('submit', (e) => {
+    addTaskForm.addEventListener('submit', (e) => {
       e.preventDefault();
-      const title = directiveTitle.value.trim();
-      if (!title) {
-        directiveTitle.focus();
-        return;
-      }
+      const titleInput = document.getElementById('task-title');
+      const categoryInput = document.getElementById('task-category');
+      const priorityInput = document.getElementById('task-priority');
+      const dueDateInput = document.getElementById('task-due-date');
 
-      const division = document.getElementById('directive-division').value;
-      const alert = document.getElementById('directive-alert').value;
-      const date = document.getElementById('directive-date').value;
+      const title = titleInput.value.trim();
+      if (!title) return;
 
-      const randomSec = Math.floor(100 + Math.random() * 900);
-      const newDirective = {
-        id: `SEC-${randomSec}`,
+      const newTask = {
+        id: Date.now().toString(),
         title: title,
-        division: division,
-        alert: alert,
-        dueDate: date,
+        category: categoryInput.value,
+        priority: priorityInput.value,
+        dueDate: dueDateInput.value,
         completed: false,
-        timestamp: Date.now()
+        createdAt: Date.now()
       };
 
-      sound.affirmative();
-      triggerHaptic([20, 50, 20]);
-
-      directives.unshift(newDirective);
-      saveDirectives();
-      closeModal();
+      tasks.unshift(newTask);
+      saveTasks();
+      closeSheet();
+      addTaskForm.reset();
+      showToast('Task created successfully');
     });
 
-    // SEARCH INPUT HANDLING
-    lcarsSearch.addEventListener('input', (e) => {
+    function openSheet() {
+      sheetOverlay.classList.remove('opacity-0', 'pointer-events-none');
+      bottomSheet.classList.remove('translate-y-full');
+      setTimeout(() => document.getElementById('task-title').focus(), 150);
+    }
+
+    function closeSheet() {
+      sheetOverlay.classList.add('opacity-0', 'pointer-events-none');
+      bottomSheet.classList.add('translate-y-full');
+    }
+
+    openSheetBtn.addEventListener('click', openSheet);
+    closeSheetBtn.addEventListener('click', closeSheet);
+    sheetOverlay.addEventListener('click', closeSheet);
+
+    searchInput.addEventListener('input', (e) => {
       searchQuery = e.target.value;
       clearSearchBtn.classList.toggle('hidden', !searchQuery);
-      renderDirectives();
+      renderTasks();
     });
 
     clearSearchBtn.addEventListener('click', () => {
-      sound.beep(987.77, 659.25, 0.06);
-      lcarsSearch.value = '';
+      searchInput.value = '';
       searchQuery = '';
       clearSearchBtn.classList.add('hidden');
-      renderDirectives();
-      lcarsSearch.focus();
+      renderTasks();
     });
 
-    // SORT BUTTON
-    sortBtn.addEventListener('click', () => {
-      sound.beep(1318.51, 1567.98, 0.08);
-      triggerHaptic([25]);
-      directives.sort((a, b) => Number(a.completed) - Number(b.completed) || b.timestamp - a.timestamp);
-      renderDirectives();
-    });
-
-    // DIVISION FILTER PILLS
-    document.querySelectorAll('.div-chip').forEach(btn => {
+    // Category chips click
+    document.querySelectorAll('.category-chip').forEach(btn => {
       btn.addEventListener('click', () => {
-        sound.beep(1174.66, 1318.51, 0.06);
-        triggerHaptic([15]);
-
-        document.querySelectorAll('.div-chip').forEach(b => {
-          b.classList.remove('bg-[#ff9900]', 'text-black');
-          b.classList.add('text-[#ffaa00]');
+        document.querySelectorAll('.category-chip').forEach(b => {
+          b.classList.remove('bg-brand-500', 'text-white', 'shadow-sm', 'shadow-brand-500/20');
+          b.classList.add('bg-white', 'dark:bg-slate-900', 'text-slate-600', 'dark:text-slate-300', 'border', 'border-slate-200', 'dark:border-slate-800');
         });
 
-        btn.classList.add('bg-[#ff9900]', 'text-black');
-        btn.classList.remove('text-[#ffaa00]');
+        btn.classList.add('bg-brand-500', 'text-white', 'shadow-sm', 'shadow-brand-500/20');
+        btn.classList.remove('bg-white', 'dark:bg-slate-900', 'text-slate-600', 'dark:text-slate-300', 'border', 'border-slate-200', 'dark:border-slate-800');
 
-        currentDivision = btn.dataset.division;
-        renderDirectives();
+        currentCategory = btn.dataset.category;
+        renderTasks();
       });
     });
 
-    // STATUS BUTTONS (ALL / ACTIVE / FULFILLED)
-    const statusAll = document.getElementById('status-all');
-    const statusPending = document.getElementById('status-pending');
-    const statusCompleted = document.getElementById('status-completed');
-    const statusButtons = [statusAll, statusPending, statusCompleted];
+    // Status filter buttons
+    const filterAllBtn = document.getElementById('filter-all');
+    const filterActiveBtn = document.getElementById('filter-active');
+    const filterDoneBtn = document.getElementById('filter-done');
+    const statusBtns = [filterAllBtn, filterActiveBtn, filterDoneBtn];
 
-    function setStatus(activeBtn, status) {
-      sound.beep(1046.50, 1174.66, 0.06);
-      triggerHaptic([15]);
-
-      statusButtons.forEach(b => {
-        b.classList.remove('bg-[#ff9900]', 'text-black', 'font-bold');
-        b.classList.add('text-[#ffaa00]');
+    function setStatusActive(activeBtn, status) {
+      statusBtns.forEach(btn => {
+        btn.classList.remove('bg-white', 'dark:bg-slate-900', 'text-slate-800', 'dark:text-slate-100', 'shadow-sm');
+        btn.classList.add('text-slate-600', 'dark:text-slate-400');
       });
-
-      activeBtn.classList.add('bg-[#ff9900]', 'text-black', 'font-bold');
-      activeBtn.classList.remove('text-[#ffaa00]');
-
-      currentStatus = status;
-      renderDirectives();
+      activeBtn.classList.add('bg-white', 'dark:bg-slate-900', 'text-slate-800', 'dark:text-slate-100', 'shadow-sm');
+      activeBtn.classList.remove('text-slate-600', 'dark:text-slate-400');
+      currentFilter = status;
+      renderTasks();
     }
 
-    statusAll.addEventListener('click', () => setStatus(statusAll, 'all'));
-    statusPending.addEventListener('click', () => setStatus(statusPending, 'active'));
-    statusCompleted.addEventListener('click', () => setStatus(statusCompleted, 'completed'));
+    filterAllBtn.addEventListener('click', () => setStatusActive(filterAllBtn, 'all'));
+    filterActiveBtn.addEventListener('click', () => setStatusActive(filterActiveBtn, 'active'));
+    filterDoneBtn.addEventListener('click', () => setStatusActive(filterDoneBtn, 'done'));
 
-    // AUDIO ON/OFF TOGGLE
-    soundToggleBtn.addEventListener('click', () => {
-      sound.soundEnabled = !sound.soundEnabled;
-      if (sound.soundEnabled) {
-        sound.init();
-        sound.beep(880, 1318.51, 0.08);
-        soundIcon.classList.replace('fa-volume-xmark', 'fa-volume-high');
-        soundToggleBtn.classList.replace('bg-[#556677]', 'bg-[#cc99cc]');
-      } else {
-        soundIcon.classList.replace('fa-volume-high', 'fa-volume-xmark');
-        soundToggleBtn.classList.replace('bg-[#cc99cc]', 'bg-[#556677]');
-      }
+    pwaHelpBtn.addEventListener('click', () => {
+      pwaModalOverlay.classList.remove('hidden');
     });
 
-    // Unlock Web Audio on first user touch / tap
-    const unlockAudio = () => {
-      sound.init();
-      window.removeEventListener('click', unlockAudio);
-      window.removeEventListener('touchstart', unlockAudio);
-    };
-    window.addEventListener('click', unlockAudio, { passive: true });
-    window.addEventListener('touchstart', unlockAudio, { passive: true });
+    closePwaModalBtn.addEventListener('click', () => {
+      pwaModalOverlay.classList.add('hidden');
+    });
 
-    // Boot up
-    window.addEventListener('DOMContentLoaded', initLCARS);
+    gotItBtn.addEventListener('click', () => {
+      pwaModalOverlay.classList.add('hidden');
+    });
+
+    pwaModalOverlay.addEventListener('click', (e) => {
+      if (e.target === pwaModalOverlay) pwaModalOverlay.classList.add('hidden');
+    });
+
+    copyLinkBtn.addEventListener('click', () => {
+      const dummy = document.createElement('textarea');
+      dummy.value = window.location.href;
+      document.body.appendChild(dummy);
+      dummy.select();
+      document.execCommand('copy');
+      document.body.removeChild(dummy);
+
+      copyLinkBtn.textContent = 'Copied!';
+      setTimeout(() => { copyLinkBtn.textContent = 'Copy Link'; }, 2000);
+      showToast('Link copied to clipboard');
+    });
+
+    let toastTimeout;
+    function showToast(message) {
+      clearTimeout(toastTimeout);
+      toast.textContent = message;
+      toast.classList.remove('opacity-0', 'pointer-events-none', '-translate-y-4');
+      toastTimeout = setTimeout(() => {
+        toast.classList.add('opacity-0', 'pointer-events-none', '-translate-y-4');
+      }, 2200);
+    }
+
+    // Start App
+    window.addEventListener('DOMContentLoaded', initApp);
   </script>
 </body>
 </html>
