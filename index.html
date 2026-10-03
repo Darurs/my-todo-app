@@ -1,30 +1,64 @@
 <!DOCTYPE html>
-<html lang="en" class="h-full bg-[#0d0f14]">
+<html lang="en" class="h-full bg-black">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <meta name="theme-color" content="#12151c">
-  <meta name="description" content="Clean Material Design To-Do App with Star Trek Palette">
+  <meta name="theme-color" content="#000000">
+  <meta name="description" content="Clean everyday To-Do app styled with classic Okuda shapes and colors">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>Starfleet Directives</title>
+  <title>Daily Tasks</title>
 
-  <!-- Tailwind CSS & Icons -->
+  <!-- Tailwind CSS & Font Awesome -->
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Fonts: Antonio for authentic Okuda proportions + Inter for clean reading -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Antonio:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
   <style>
+    :root {
+      --lcars-orange: #ff9900;
+      --lcars-amber: #ffaa00;
+      --lcars-salmon: #ff7766;
+      --lcars-lilac: #cc99cc;
+      --lcars-blue: #33bbff;
+      --lcars-violet: #9977aa;
+      --lcars-dark: #12141c;
+      --lcars-card: #0d1017;
+    }
+
     body {
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       -webkit-tap-highlight-color: transparent;
+      background-color: #000000;
     }
+
+    .font-okuda {
+      font-family: 'Antonio', sans-serif;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    /* LCARS-style sweeping top-left elbow */
+    .okuda-elbow {
+      border-top-left-radius: 36px;
+    }
+
+    /* Standard pill / stadium shape */
+    .stadium-pill {
+      border-radius: 9999px;
+    }
+
+    /* Ensure form controls prevent Android zoom */
     input, select, textarea {
-      font-size: 16px !important; /* Prevents iOS/Android auto-zoom on input tap */
+      font-size: 16px !important;
     }
+
+    /* Hide standard scrollbars for sleek aesthetic */
     .scrollbar-none::-webkit-scrollbar {
       display: none;
     }
@@ -35,191 +69,254 @@
   </style>
 </head>
 
-<body class="h-full flex flex-col justify-between text-slate-100 bg-[#0d0f14]">
+<body class="h-full flex flex-col justify-between text-slate-100 bg-black selection:bg-[#ff9900] selection:text-black">
 
-  <!-- Top App Bar -->
-  <header class="bg-[#151922] border-b border-[#252b3b] sticky top-0 z-20 shadow-md">
-    <div class="max-w-xl mx-auto px-4 py-3.5 flex items-center justify-between">
-      <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-2xl bg-[#ff9900] text-black font-extrabold flex items-center justify-center text-lg shadow-sm shadow-[#ff9900]/30">
-          <i class="fa-solid fa-list-check pointer-events-none"></i>
+  <!-- Top LCARS Arch Header -->
+  <header class="sticky top-0 z-20 bg-black pt-2 px-3 sm:px-4">
+    <div class="max-w-2xl mx-auto">
+      
+      <!-- Top Sweeping Frame Bar -->
+      <div class="flex items-stretch gap-2 h-14">
+        <!-- Elbow block -->
+        <div class="okuda-elbow w-24 sm:w-32 bg-[#ff9900] flex flex-col justify-end p-2 flex-shrink-0 shadow-[0_0_12px_rgba(255,153,0,0.35)]">
+          <span class="font-okuda text-xs sm:text-sm font-bold text-black leading-none">TASKS</span>
         </div>
-        <div>
-          <h1 class="text-base font-bold text-white leading-tight">Directives</h1>
-          <p class="text-xs text-[#cc99cc]">Starfleet Task Manager</p>
+
+        <!-- Upper Horizontal Header Rail -->
+        <div class="flex-1 bg-[#1a202c] rounded-tr-2xl rounded-br-lg flex items-center justify-between px-3 sm:px-4 border-l-4 border-[#ffaa00]">
+          <div>
+            <h1 class="font-okuda text-base sm:text-lg font-bold tracking-wider text-[#ffaa00] leading-none">
+              DAILY TO-DO LIST
+            </h1>
+            <p id="current-date-display" class="text-[11px] text-[#cc99cc] font-medium tracking-wide mt-0.5">
+              Today's Schedule
+            </p>
+          </div>
+
+          <!-- Sound & Header Metric Controls -->
+          <div class="flex items-center gap-2">
+            <button 
+              id="sound-btn" 
+              type="button" 
+              class="h-8 px-2.5 rounded-full bg-black border border-[#ffaa00] text-[#ffaa00] hover:bg-[#ffaa00] hover:text-black transition-all flex items-center gap-1.5 text-xs font-semibold"
+              title="Toggle sound feedback">
+              <i id="sound-icon" class="fa-solid fa-volume-high text-[11px] pointer-events-none"></i>
+              <span class="font-okuda hidden sm:inline pointer-events-none">AUDIO</span>
+            </button>
+          </div>
         </div>
       </div>
 
-      <div class="flex items-center gap-2">
-        <button id="sound-btn" type="button" class="w-9 h-9 rounded-full bg-[#1e2433] text-[#ffaa00] flex items-center justify-center hover:bg-[#283044] transition-colors" title="Toggle Beep Feedback">
-          <i id="sound-icon" class="fa-solid fa-volume-high text-sm pointer-events-none"></i>
-        </button>
+      <!-- Quick Metrics Strip -->
+      <div class="flex items-stretch gap-2 mt-2 h-7">
+        <div class="w-24 sm:w-32 bg-[#cc99cc] rounded-bl-xl flex items-center px-2 flex-shrink-0">
+          <span class="font-okuda text-[11px] font-bold text-black tracking-wide">METRICS</span>
+        </div>
+        <div class="flex-1 bg-[#0e121a] rounded-r-lg border border-[#222938] flex items-center justify-between px-3 text-xs">
+          <div class="flex items-center gap-3 font-medium">
+            <span class="text-slate-400">Total: <strong id="metric-total" class="text-white">0</strong></span>
+            <span class="text-slate-400">Active: <strong id="metric-active" class="text-[#33bbff]">0</strong></span>
+            <span class="text-slate-400">Done: <strong id="metric-done" class="text-[#ff9900]">0</strong></span>
+          </div>
+          <span class="text-[10px] text-[#ff7766] font-okuda font-bold tracking-wider hidden xs:inline">ONLINE</span>
+        </div>
       </div>
+
     </div>
   </header>
 
-  <!-- Main Scrollable Content -->
-  <main class="flex-1 max-w-xl w-full mx-auto p-4 pb-28 overflow-y-auto">
+  <!-- Main Content Layout with Left Rail & Content Area -->
+  <main class="flex-1 max-w-2xl w-full mx-auto px-3 sm:px-4 py-3 flex gap-2.5 overflow-hidden">
+    
+    <!-- Left Decorative Side Rail (Signature Okuda Architecture) -->
+    <aside class="w-5 sm:w-6 flex flex-col gap-1.5 flex-shrink-0 py-1">
+      <div class="h-10 bg-[#33bbff] rounded-l-md shadow-[0_0_8px_rgba(51,187,255,0.4)]"></div>
+      <div class="h-20 bg-[#9977aa] rounded-l-md"></div>
+      <div class="h-8 bg-[#ffaa00] rounded-l-md"></div>
+      <div class="flex-1 bg-[#1a2233] rounded-l-md border-l-2 border-[#ff9900]/40 min-h-[140px]"></div>
+      <div class="h-16 bg-[#ff7766] rounded-bl-xl"></div>
+    </aside>
 
-    <!-- Search Box -->
-    <div class="relative mb-3.5">
-      <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-[#8b9bb4] text-sm pointer-events-none"></i>
-      <input 
-        type="text" 
-        id="search-input" 
-        placeholder="Search tasks..." 
-        autocomplete="off"
-        class="w-full h-11 pl-10 pr-10 bg-[#161b26] border border-[#252c3c] text-white placeholder-[#687790] rounded-xl text-sm focus:outline-none focus:border-[#ff9900] transition-colors">
-      <button 
-        type="button" 
-        id="clear-search" 
-        class="hidden absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white p-1">
-        <i class="fa-solid fa-xmark text-sm pointer-events-none"></i>
-      </button>
-    </div>
+    <!-- Main Interactive Panel -->
+    <section class="flex-1 flex flex-col min-w-0 overflow-y-auto pb-28 scrollbar-none pr-0.5">
 
-    <!-- Category Filter Chips -->
-    <div class="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none mb-3" id="category-chips">
-      <button type="button" data-cat="all" class="cat-pill px-3.5 py-1.5 rounded-full text-xs font-semibold bg-[#ff9900] text-black whitespace-nowrap shadow-sm">
-        All
-      </button>
-      <button type="button" data-cat="Command" class="cat-pill px-3.5 py-1.5 rounded-full text-xs font-medium bg-[#161b26] border border-[#273042] text-[#ff7777] whitespace-nowrap">
-        Command
-      </button>
-      <button type="button" data-cat="Operations" class="cat-pill px-3.5 py-1.5 rounded-full text-xs font-medium bg-[#161b26] border border-[#273042] text-[#ffaa00] whitespace-nowrap">
-        Operations
-      </button>
-      <button type="button" data-cat="Sciences" class="cat-pill px-3.5 py-1.5 rounded-full text-xs font-medium bg-[#161b26] border border-[#273042] text-[#33bbff] whitespace-nowrap">
-        Sciences
-      </button>
-      <button type="button" data-cat="Medical" class="cat-pill px-3.5 py-1.5 rounded-full text-xs font-medium bg-[#161b26] border border-[#273042] text-[#cc99cc] whitespace-nowrap">
-        Medical
-      </button>
-      <button type="button" data-cat="Personal" class="cat-pill px-3.5 py-1.5 rounded-full text-xs font-medium bg-[#161b26] border border-[#273042] text-[#34d399] whitespace-nowrap">
-        Personal
-      </button>
-    </div>
-
-    <!-- Status Tabs & Metrics -->
-    <div class="flex items-center justify-between bg-[#161b26] border border-[#252c3c] p-1 rounded-xl mb-4">
-      <div class="flex items-center gap-1 text-xs">
-        <button type="button" id="tab-all" class="tab-btn px-3 py-1.5 rounded-lg bg-[#ff9900] text-black font-semibold">All</button>
-        <button type="button" id="tab-active" class="tab-btn px-3 py-1.5 rounded-lg text-slate-300 font-medium">Pending</button>
-        <button type="button" id="tab-completed" class="tab-btn px-3 py-1.5 rounded-lg text-slate-300 font-medium">Done</button>
+      <!-- Search Field -->
+      <div class="relative mb-3">
+        <div class="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#33bbff] pointer-events-none text-sm">
+          <i class="fa-solid fa-magnifying-glass"></i>
+        </div>
+        <input 
+          type="text" 
+          id="search-input" 
+          placeholder="Search tasks..." 
+          autocomplete="off"
+          class="w-full h-11 pl-10 pr-9 bg-[#0b0e14] border-2 border-[#202738] focus:border-[#33bbff] text-slate-100 placeholder-slate-500 rounded-xl text-sm focus:outline-none transition-colors">
+        <button 
+          type="button" 
+          id="clear-search" 
+          class="hidden absolute right-3 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full text-slate-400 hover:text-white flex items-center justify-center">
+          <i class="fa-solid fa-xmark text-xs pointer-events-none"></i>
+        </button>
       </div>
-      <div class="pr-2.5 text-xs text-slate-400">
-        Pending: <span id="pending-count" class="font-bold text-[#ffaa00]">0</span>
-      </div>
-    </div>
 
-    <!-- Task Cards Container -->
-    <div id="tasks-container" class="space-y-2.5">
-      <!-- Cards render here dynamically -->
-    </div>
-
-    <!-- Empty State -->
-    <div id="empty-state" class="hidden text-center py-14 px-4 border border-dashed border-[#273145] rounded-2xl mt-4">
-      <div class="w-12 h-12 rounded-full bg-[#1a2130] text-[#ff9900] mx-auto flex items-center justify-center text-xl mb-3">
-        <i class="fa-solid fa-check"></i>
+      <!-- Category Filter Pills (Horizontal Scrollable) -->
+      <div class="flex items-center gap-2 overflow-x-auto pb-2.5 mb-2.5 scrollbar-none" id="category-chips">
+        <button type="button" data-cat="all" class="cat-chip px-3.5 py-1.5 rounded-full font-okuda text-xs font-bold bg-[#ff9900] text-black whitespace-nowrap shadow-[0_0_8px_rgba(255,153,0,0.3)] transition-all">
+          ALL
+        </button>
+        <button type="button" data-cat="Personal" class="cat-chip px-3.5 py-1.5 rounded-full font-okuda text-xs font-bold bg-[#111622] border border-[#cc99cc]/60 text-[#cc99cc] whitespace-nowrap transition-all">
+          PERSONAL
+        </button>
+        <button type="button" data-cat="Work" class="cat-chip px-3.5 py-1.5 rounded-full font-okuda text-xs font-bold bg-[#111622] border border-[#ffaa00]/60 text-[#ffaa00] whitespace-nowrap transition-all">
+          WORK
+        </button>
+        <button type="button" data-cat="Shopping" class="cat-chip px-3.5 py-1.5 rounded-full font-okuda text-xs font-bold bg-[#111622] border border-[#33bbff]/60 text-[#33bbff] whitespace-nowrap transition-all">
+          SHOPPING
+        </button>
+        <button type="button" data-cat="Fitness" class="cat-chip px-3.5 py-1.5 rounded-full font-okuda text-xs font-bold bg-[#111622] border border-[#34d399]/60 text-[#34d399] whitespace-nowrap transition-all">
+          FITNESS
+        </button>
+        <button type="button" data-cat="General" class="cat-chip px-3.5 py-1.5 rounded-full font-okuda text-xs font-bold bg-[#111622] border border-[#ff7766]/60 text-[#ff7766] whitespace-nowrap transition-all">
+          GENERAL
+        </button>
       </div>
-      <h3 class="text-sm font-semibold text-white mb-1">No directives found</h3>
-      <p class="text-xs text-slate-400">Tap the orange plus button below to log a new task.</p>
-    </div>
+
+      <!-- Status Filter Tabs: All, Active, Completed -->
+      <div class="grid grid-cols-3 gap-1.5 bg-[#0e121a] p-1.5 rounded-xl border border-[#202738] mb-3.5">
+        <button type="button" id="tab-all" class="status-tab py-2 rounded-lg font-okuda text-xs font-bold text-center bg-[#ff9900] text-black transition-all">
+          ALL
+        </button>
+        <button type="button" id="tab-active" class="status-tab py-2 rounded-lg font-okuda text-xs font-bold text-center text-slate-300 hover:text-white transition-all">
+          ACTIVE
+        </button>
+        <button type="button" id="tab-completed" class="status-tab py-2 rounded-lg font-okuda text-xs font-bold text-center text-slate-300 hover:text-white transition-all">
+          COMPLETED
+        </button>
+      </div>
+
+      <!-- Tasks List Container -->
+      <div id="tasks-container" class="space-y-2.5">
+        <!-- Rendered items appear here -->
+      </div>
+
+      <!-- Empty State -->
+      <div id="empty-state" class="hidden text-center py-12 px-4 rounded-2xl border-2 border-dashed border-[#222b3d] bg-[#090b10] mt-3">
+        <div class="w-12 h-12 rounded-full bg-[#182030] text-[#ff9900] mx-auto flex items-center justify-center text-lg mb-3 shadow-[0_0_12px_rgba(255,153,0,0.25)]">
+          <i class="fa-solid fa-clipboard-check"></i>
+        </div>
+        <h2 class="font-okuda text-sm font-bold text-white tracking-wider mb-1">NO TASKS FOUND</h2>
+        <p class="text-xs text-slate-400 max-w-xs mx-auto">Your list is clear. Tap the "NEW TASK" button below to add your next item.</p>
+      </div>
+
+    </section>
   </main>
 
-  <!-- Floating Action Button (FAB) -->
-  <div class="fixed bottom-6 right-6 z-30 max-w-xl">
-    <button 
-      id="open-modal-btn" 
-      type="button" 
-      class="w-14 h-14 rounded-2xl bg-[#ff9900] text-black flex items-center justify-center shadow-lg shadow-[#ff9900]/30 hover:bg-[#ffaa00] active:scale-95 transition-all text-xl"
-      aria-label="Add Task">
-      <i class="fa-solid fa-plus pointer-events-none"></i>
-    </button>
+  <!-- Bottom Action Bar / Add Button -->
+  <div class="fixed bottom-4 left-0 right-0 z-30 px-4 pointer-events-none">
+    <div class="max-w-2xl mx-auto flex justify-end">
+      <button 
+        id="open-modal-btn" 
+        type="button" 
+        class="pointer-events-auto h-13 px-6 rounded-full bg-[#ff9900] text-black font-okuda font-bold text-sm flex items-center gap-2.5 shadow-[0_4px_20px_rgba(255,153,0,0.45)] hover:bg-[#ffaa00] active:scale-95 transition-all">
+        <span class="w-6 h-6 rounded-full bg-black text-[#ff9900] flex items-center justify-center text-xs">
+          <i class="fa-solid fa-plus pointer-events-none"></i>
+        </span>
+        <span class="tracking-wider">NEW TASK</span>
+      </button>
+    </div>
   </div>
 
   <!-- Modal Backdrop -->
   <div 
     id="modal-backdrop" 
-    class="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 transition-opacity duration-200 opacity-0 pointer-events-none">
+    class="fixed inset-0 bg-black/75 backdrop-blur-xs z-40 transition-opacity duration-200 opacity-0 pointer-events-none">
   </div>
 
-  <!-- Bottom Sheet / Modal -->
+  <!-- New Task Bottom Sheet -->
   <div 
     id="task-modal" 
-    class="fixed bottom-0 left-0 right-0 z-50 bg-[#161b26] border-t border-[#2a3449] rounded-t-3xl p-5 pb-7 max-w-xl mx-auto shadow-2xl transform translate-y-full transition-transform duration-300 pointer-events-none">
+    class="fixed bottom-0 left-0 right-0 z-50 bg-[#0d1017] border-t-2 border-[#ff9900] rounded-t-3xl p-5 pb-8 max-w-2xl mx-auto shadow-2xl transform translate-y-full transition-transform duration-300 pointer-events-none">
     
-    <div class="flex items-center justify-between pb-3 mb-3 border-b border-[#252c3c]">
-      <h2 class="text-base font-bold text-white">New Task Directive</h2>
+    <div class="flex items-center justify-between pb-3 mb-4 border-b border-[#202738]">
+      <div class="flex items-center gap-2">
+        <div class="w-3 h-5 bg-[#ff9900] rounded-sm"></div>
+        <h2 class="font-okuda text-base font-bold text-white tracking-wider">CREATE NEW TASK</h2>
+      </div>
       <button 
         id="close-modal-btn" 
         type="button" 
-        class="w-8 h-8 rounded-full bg-[#202738] text-slate-400 hover:text-white flex items-center justify-center text-sm">
+        class="w-8 h-8 rounded-full bg-[#1b2230] text-slate-400 hover:text-white flex items-center justify-center text-sm"
+        aria-label="Close modal">
         <i class="fa-solid fa-xmark pointer-events-none"></i>
       </button>
     </div>
 
     <form id="task-form" class="space-y-4">
       <div>
-        <label for="task-title" class="block text-xs font-semibold text-slate-300 mb-1.5">TASK TITLE</label>
+        <label for="task-title" class="block font-okuda text-xs font-bold text-[#33bbff] tracking-wider mb-1.5">TASK TITLE</label>
         <input 
           type="text" 
           id="task-title" 
           required 
-          placeholder="What needs to be done?" 
+          placeholder="e.g., Pick up groceries, Finalize report" 
           autocomplete="off"
-          class="w-full h-11 px-3.5 bg-[#0f131c] border border-[#283244] text-white placeholder-slate-500 rounded-xl text-sm focus:outline-none focus:border-[#ff9900]">
+          class="w-full h-11 px-3.5 bg-[#05070a] border-2 border-[#222a3a] focus:border-[#ff9900] text-white placeholder-slate-600 rounded-xl text-sm focus:outline-none transition-colors">
       </div>
 
       <div class="grid grid-cols-2 gap-3">
         <div>
-          <label for="task-category" class="block text-xs font-semibold text-slate-300 mb-1.5">CATEGORY</label>
+          <label for="task-category" class="block font-okuda text-xs font-bold text-[#cc99cc] tracking-wider mb-1.5">CATEGORY</label>
           <select 
             id="task-category" 
-            class="w-full h-11 px-3 bg-[#0f131c] border border-[#283244] text-white rounded-xl text-sm focus:outline-none focus:border-[#ff9900]">
-            <option value="Operations" selected>Operations (Amber)</option>
-            <option value="Command">Command (Red)</option>
-            <option value="Sciences">Sciences (Cyan)</option>
-            <option value="Medical">Medical (Lilac)</option>
-            <option value="Personal">Personal (Green)</option>
+            class="w-full h-11 px-3 bg-[#05070a] border-2 border-[#222a3a] focus:border-[#cc99cc] text-white rounded-xl text-sm focus:outline-none">
+            <option value="Personal">Personal</option>
+            <option value="Work" selected>Work</option>
+            <option value="Shopping">Shopping</option>
+            <option value="Fitness">Fitness</option>
+            <option value="General">General</option>
           </select>
         </div>
 
         <div>
-          <label for="task-priority" class="block text-xs font-semibold text-slate-300 mb-1.5">PRIORITY</label>
+          <label for="task-priority" class="block font-okuda text-xs font-bold text-[#ffaa00] tracking-wider mb-1.5">PRIORITY</label>
           <select 
             id="task-priority" 
-            class="w-full h-11 px-3 bg-[#0f131c] border border-[#283244] text-white rounded-xl text-sm focus:outline-none focus:border-[#ff9900]">
+            class="w-full h-11 px-3 bg-[#05070a] border-2 border-[#222a3a] focus:border-[#ffaa00] text-white rounded-xl text-sm focus:outline-none">
             <option value="Low">Low</option>
             <option value="Medium" selected>Medium</option>
-            <option value="High">High (Urgent)</option>
+            <option value="High">High</option>
           </select>
         </div>
       </div>
 
       <div>
-        <label for="task-due" class="block text-xs font-semibold text-slate-300 mb-1.5">DUE DATE (OPTIONAL)</label>
+        <label for="task-due" class="block font-okuda text-xs font-bold text-[#ff7766] tracking-wider mb-1.5">DUE DATE (OPTIONAL)</label>
         <input 
           type="date" 
           id="task-due" 
-          class="w-full h-11 px-3 bg-[#0f131c] border border-[#283244] text-white rounded-xl text-sm focus:outline-none focus:border-[#ff9900]">
+          class="w-full h-11 px-3 bg-[#05070a] border-2 border-[#222a3a] focus:border-[#ff7766] text-white rounded-xl text-sm focus:outline-none">
       </div>
 
-      <div class="pt-2">
+      <!-- Action Buttons -->
+      <div class="grid grid-cols-2 gap-3 pt-2">
+        <button 
+          id="cancel-modal-btn"
+          type="button" 
+          class="h-11 rounded-xl bg-[#141a24] border border-[#2b3547] text-slate-300 font-okuda font-bold text-xs tracking-wider hover:bg-[#1b2332] active:scale-95 transition-all">
+          CANCEL
+        </button>
         <button 
           type="submit" 
-          class="w-full h-12 bg-[#ff9900] hover:bg-[#ffaa00] active:scale-[0.98] text-black font-bold text-sm rounded-xl flex items-center justify-center gap-2 shadow-md shadow-[#ff9900]/20 transition-all">
-          <i class="fa-solid fa-check pointer-events-none"></i>
-          <span>Save Directive</span>
+          class="h-11 rounded-xl bg-[#ff9900] text-black font-okuda font-bold text-xs tracking-wider hover:bg-[#ffaa00] active:scale-95 shadow-[0_2px_12px_rgba(255,153,0,0.35)] transition-all">
+          ADD TASK
         </button>
       </div>
     </form>
   </div>
 
-  <!-- SCRIPT -->
   <script>
-    /* Audio synthesizer for subtle feedback */
-    class AudioFeedback {
+    /* Audio feedback synthesizer */
+    class TactileSound {
       constructor() {
         this.ctx = null;
         this.enabled = true;
@@ -233,48 +330,37 @@
           this.ctx.resume().catch(() => {});
         }
       }
-      tap() {
+      beep(freq = 720, duration = 0.05, type = 'sine', gainVal = 0.04) {
         if (!this.enabled) return;
         try {
           this.init();
           if (!this.ctx) return;
           const osc = this.ctx.createOscillator();
           const gain = this.ctx.createGain();
-          osc.type = 'sine';
-          osc.frequency.setValueAtTime(800, this.ctx.currentTime);
-          gain.gain.setValueAtTime(0.04, this.ctx.currentTime);
-          gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.05);
+          osc.type = type;
+          osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+          gain.gain.setValueAtTime(gainVal, this.ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + duration);
           osc.connect(gain);
           gain.connect(this.ctx.destination);
           osc.start();
-          osc.stop(this.ctx.currentTime + 0.05);
+          osc.stop(this.ctx.currentTime + duration);
         } catch (e) {}
       }
-      complete() {
-        if (!this.enabled) return;
-        try {
-          this.init();
-          if (!this.ctx) return;
-          const osc = this.ctx.createOscillator();
-          const gain = this.ctx.createGain();
-          osc.type = 'sine';
-          osc.frequency.setValueAtTime(600, this.ctx.currentTime);
-          osc.frequency.exponentialRampToValueAtTime(900, this.ctx.currentTime + 0.1);
-          gain.gain.setValueAtTime(0.06, this.ctx.currentTime);
-          gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.1);
-          osc.connect(gain);
-          gain.connect(this.ctx.destination);
-          osc.start();
-          osc.stop(this.ctx.currentTime + 0.1);
-        } catch (e) {}
+      click() {
+        this.beep(850, 0.04, 'sine', 0.03);
+      }
+      done() {
+        this.beep(540, 0.06, 'sine', 0.04);
+        setTimeout(() => this.beep(880, 0.08, 'sine', 0.05), 50);
       }
     }
 
-    const sound = new AudioFeedback();
+    const sound = new TactileSound();
 
-    function triggerHaptic(ms = 15) {
+    function triggerHaptic(duration = 15) {
       if ('vibrate' in navigator) {
-        try { navigator.vibrate(ms); } catch (e) {}
+        try { navigator.vibrate(duration); } catch (e) {}
       }
     }
 
@@ -284,69 +370,83 @@
     let activeCategory = 'all';
     let searchQuery = '';
 
-    // DOM
+    // DOM ELEMENTS
     const tasksContainer = document.getElementById('tasks-container');
     const emptyState = document.getElementById('empty-state');
-    const pendingCount = document.getElementById('pending-count');
     const searchInput = document.getElementById('search-input');
     const clearSearch = document.getElementById('clear-search');
+    const currentDateDisplay = document.getElementById('current-date-display');
     const soundBtn = document.getElementById('sound-btn');
     const soundIcon = document.getElementById('sound-icon');
 
-    // MODAL
+    // METRICS
+    const metricTotal = document.getElementById('metric-total');
+    const metricActive = document.getElementById('metric-active');
+    const metricDone = document.getElementById('metric-done');
+
+    // MODAL ELEMENTS
     const openModalBtn = document.getElementById('open-modal-btn');
     const closeModalBtn = document.getElementById('close-modal-btn');
+    const cancelModalBtn = document.getElementById('cancel-modal-btn');
     const modalBackdrop = document.getElementById('modal-backdrop');
     const taskModal = document.getElementById('task-modal');
     const taskForm = document.getElementById('task-form');
     const taskTitle = document.getElementById('task-title');
 
-    // STYLE HELPERS
-    function getCategoryBadge(cat) {
-      switch (cat) {
-        case 'Command':
-          return `<span class="px-2 py-0.5 rounded-md text-[11px] font-semibold bg-[#ef4444]/15 text-[#ef4444]">Command</span>`;
-        case 'Sciences':
-          return `<span class="px-2 py-0.5 rounded-md text-[11px] font-semibold bg-[#33bbff]/15 text-[#33bbff]">Sciences</span>`;
-        case 'Medical':
-          return `<span class="px-2 py-0.5 rounded-md text-[11px] font-semibold bg-[#cc99cc]/15 text-[#cc99cc]">Medical</span>`;
+    // DATE FORMATTER (Normal friendly Gregorian format)
+    function updateDate() {
+      const now = new Date();
+      const options = { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' };
+      currentDateDisplay.textContent = now.toLocaleDateString(undefined, options);
+    }
+
+    // CATEGORY BADGE BUILDER (Normal names with Okuda colors)
+    function getCategoryPill(category) {
+      switch (category) {
         case 'Personal':
-          return `<span class="px-2 py-0.5 rounded-md text-[11px] font-semibold bg-[#34d399]/15 text-[#34d399]">Personal</span>`;
-        case 'Operations':
+          return `<span class="px-2 py-0.5 rounded-full font-okuda text-[10px] font-bold bg-[#cc99cc]/20 border border-[#cc99cc]/50 text-[#cc99cc]">PERSONAL</span>`;
+        case 'Shopping':
+          return `<span class="px-2 py-0.5 rounded-full font-okuda text-[10px] font-bold bg-[#33bbff]/20 border border-[#33bbff]/50 text-[#33bbff]">SHOPPING</span>`;
+        case 'Fitness':
+          return `<span class="px-2 py-0.5 rounded-full font-okuda text-[10px] font-bold bg-[#34d399]/20 border border-[#34d399]/50 text-[#34d399]">FITNESS</span>`;
+        case 'General':
+          return `<span class="px-2 py-0.5 rounded-full font-okuda text-[10px] font-bold bg-[#ff7766]/20 border border-[#ff7766]/50 text-[#ff7766]">GENERAL</span>`;
+        case 'Work':
         default:
-          return `<span class="px-2 py-0.5 rounded-md text-[11px] font-semibold bg-[#ffaa00]/15 text-[#ffaa00]">Operations</span>`;
+          return `<span class="px-2 py-0.5 rounded-full font-okuda text-[10px] font-bold bg-[#ffaa00]/20 border border-[#ffaa00]/50 text-[#ffaa00]">WORK</span>`;
       }
     }
 
-    function getPriorityBadge(priority) {
+    // PRIORITY BADGE BUILDER
+    function getPriorityPill(priority) {
       switch (priority) {
         case 'High':
-          return `<span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-[#ef4444]/15 text-[#ef4444] border border-[#ef4444]/30">HIGH</span>`;
-        case 'Medium':
-          return `<span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-[#ffaa00]/15 text-[#ffaa00] border border-[#ffaa00]/30">MED</span>`;
+          return `<span class="px-2 py-0.5 rounded-full font-okuda text-[10px] font-bold bg-[#ff7766]/20 border border-[#ff7766] text-[#ff7766]">HIGH</span>`;
         case 'Low':
+          return `<span class="px-2 py-0.5 rounded-full font-okuda text-[10px] font-bold bg-[#33bbff]/20 border border-[#33bbff] text-[#33bbff]">LOW</span>`;
+        case 'Medium':
         default:
-          return `<span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-[#33bbff]/15 text-[#33bbff] border border-[#33bbff]/30">LOW</span>`;
+          return `<span class="px-2 py-0.5 rounded-full font-okuda text-[10px] font-bold bg-[#ffaa00]/20 border border-[#ffaa00] text-[#ffaa00]">MED</span>`;
       }
     }
 
     function escapeHtml(str) {
       const d = document.createElement('div');
-      d.textContent = str;
+      d.textContent = str || '';
       return d.innerHTML;
     }
 
-    // STORAGE
+    // STORAGE & PERSISTENCE
     function loadTasks() {
-      const data = localStorage.getItem('starfleet_tasks_modern_v1');
-      if (data) {
-        try { tasks = JSON.parse(data); } catch (e) { tasks = []; }
+      const stored = localStorage.getItem('okuda_todo_normal_v1');
+      if (stored) {
+        try { tasks = JSON.parse(stored); } catch (e) { tasks = []; }
       }
       if (!tasks || tasks.length === 0) {
         tasks = [
-          { id: 1, title: 'Inspect deflector dish alignment', category: 'Operations', priority: 'Medium', due: '', completed: false },
-          { id: 2, title: 'Review star chart telemetry updates', category: 'Sciences', priority: 'Low', due: '', completed: false },
-          { id: 3, title: 'Schedule bridge crew briefing', category: 'Command', priority: 'High', due: '', completed: true }
+          { id: 1, title: 'Weekly grocery shopping list', category: 'Shopping', priority: 'Medium', due: '', completed: false },
+          { id: 2, title: 'Morning 5km run & stretching', category: 'Fitness', priority: 'Low', due: '', completed: true },
+          { id: 3, title: 'Submit quarterly project summary', category: 'Work', priority: 'High', due: '', completed: false }
         ];
         saveTasks();
       } else {
@@ -355,26 +455,33 @@
     }
 
     function saveTasks() {
-      localStorage.setItem('starfleet_tasks_modern_v1', JSON.stringify(tasks));
+      localStorage.setItem('okuda_todo_normal_v1', JSON.stringify(tasks));
       render();
     }
 
-    // RENDER
+    // RENDER FUNCTION
     function render() {
-      const filtered = tasks.filter(t => {
-        if (activeFilter === 'active' && t.completed) return false;
-        if (activeFilter === 'completed' && !t.completed) return false;
-        if (activeCategory !== 'all' && t.category !== activeCategory) return false;
+      const totalCount = tasks.length;
+      const completedCount = tasks.filter(t => t.completed).length;
+      const activeCount = totalCount - completedCount;
+
+      metricTotal.textContent = totalCount;
+      metricActive.textContent = activeCount;
+      metricDone.textContent = completedCount;
+
+      const filtered = tasks.filter(task => {
+        if (activeFilter === 'active' && task.completed) return false;
+        if (activeFilter === 'completed' && !task.completed) return false;
+        if (activeCategory !== 'all' && task.category !== activeCategory) return false;
         if (searchQuery.trim() !== '') {
           const q = searchQuery.toLowerCase();
-          const matchTitle = (t.title || '').toLowerCase().includes(q);
-          const matchCat = (t.category || '').toLowerCase().includes(q);
+          const matchTitle = (task.title || '').toLowerCase().includes(q);
+          const matchCat = (task.category || '').toLowerCase().includes(q);
           if (!matchTitle && !matchCat) return false;
         }
         return true;
       });
 
-      pendingCount.textContent = tasks.filter(t => !t.completed).length;
       tasksContainer.innerHTML = '';
 
       if (filtered.length === 0) {
@@ -383,35 +490,45 @@
         emptyState.classList.add('hidden');
         filtered.forEach(task => {
           const card = document.createElement('div');
-          card.className = `p-3.5 bg-[#161b26] border border-[#252c3c] rounded-2xl flex items-start gap-3 transition-all ${task.completed ? 'opacity-55' : 'hover:border-[#3b465d]'}`;
+          // Okuda-inspired card styling with left accent border
+          const borderAccent = task.completed ? 'border-slate-800' : 'border-[#232c3f] hover:border-[#ff9900]';
+          const leftBarColor = task.completed ? '#475569' : (task.category === 'Work' ? '#ffaa00' : (task.category === 'Shopping' ? '#33bbff' : (task.category === 'Fitness' ? '#34d399' : '#cc99cc')));
 
+          card.className = `p-3.5 bg-[#0b0e14] border-2 ${borderAccent} rounded-2xl flex items-start gap-3 transition-all relative overflow-hidden ${task.completed ? 'opacity-60' : ''}`;
+          
           card.innerHTML = `
+            <!-- Left subtle accent pill strip inside card -->
+            <div class="absolute left-0 top-0 bottom-0 w-1.5" style="background-color: ${leftBarColor};"></div>
+
+            <!-- LCARS style toggle pill button -->
             <button 
               type="button" 
               data-action="toggle" 
               data-id="${task.id}" 
-              class="w-6 h-6 mt-0.5 rounded-lg border ${task.completed ? 'bg-[#ff9900] border-[#ff9900] text-black' : 'border-[#3b465d] bg-[#111520] hover:border-[#ff9900]'} flex items-center justify-center flex-shrink-0 transition-colors" 
-              aria-label="Toggle status">
+              class="w-7 h-7 mt-0.5 rounded-full border-2 ${task.completed ? 'bg-[#ff9900] border-[#ff9900] text-black shadow-[0_0_8px_rgba(255,153,0,0.5)]' : 'border-[#38455e] bg-[#07090e] hover:border-[#ff9900]'} flex items-center justify-center flex-shrink-0 transition-all"
+              aria-label="Toggle completed">
               <i class="fa-solid fa-check text-xs pointer-events-none ${task.completed ? 'block' : 'hidden'}"></i>
             </button>
 
+            <!-- Task Details -->
             <div class="flex-1 min-w-0">
               <p class="text-sm font-medium leading-snug break-words ${task.completed ? 'line-through text-slate-400' : 'text-slate-100'}">
                 ${escapeHtml(task.title)}
               </p>
               <div class="flex flex-wrap items-center gap-2 mt-2">
-                ${getCategoryBadge(task.category)}
-                ${getPriorityBadge(task.priority)}
-                ${task.due ? `<span class="text-[11px] text-slate-400 flex items-center gap-1"><i class="fa-regular fa-clock pointer-events-none"></i>${task.due}</span>` : ''}
+                ${getCategoryPill(task.category)}
+                ${getPriorityPill(task.priority)}
+                ${task.due ? `<span class="text-[11px] text-slate-400 font-medium flex items-center gap-1"><i class="fa-regular fa-calendar pointer-events-none text-slate-500"></i>${task.due}</span>` : ''}
               </div>
             </div>
 
+            <!-- Delete Button -->
             <button 
               type="button" 
               data-action="delete" 
               data-id="${task.id}" 
-              class="w-8 h-8 rounded-lg text-slate-400 hover:text-[#ef4444] hover:bg-[#ef4444]/10 flex items-center justify-center flex-shrink-0 transition-colors"
-              aria-label="Delete directive">
+              class="w-8 h-8 rounded-lg text-slate-500 hover:text-[#ff7766] hover:bg-[#ff7766]/10 flex items-center justify-center flex-shrink-0 transition-colors"
+              aria-label="Delete task">
               <i class="fa-regular fa-trash-can text-sm pointer-events-none"></i>
             </button>
           `;
@@ -420,7 +537,7 @@
       }
     }
 
-    // ACTIONS
+    // EVENT DELEGATION FOR TASK ACTIONS
     tasksContainer.addEventListener('click', (e) => {
       const btn = e.target.closest('button[data-action]');
       if (!btn) return;
@@ -430,26 +547,26 @@
       if (action === 'toggle') {
         tasks = tasks.map(t => {
           if (t.id === id) {
-            const next = !t.completed;
-            if (next) sound.complete();
-            else sound.tap();
+            const nextState = !t.completed;
+            if (nextState) sound.done();
+            else sound.click();
             triggerHaptic(20);
-            return { ...t, completed: next };
+            return { ...t, completed: nextState };
           }
           return t;
         });
         saveTasks();
       } else if (action === 'delete') {
-        sound.tap();
+        sound.click();
         triggerHaptic(30);
         tasks = tasks.filter(t => t.id !== id);
         saveTasks();
       }
     });
 
-    // MODAL OPEN / CLOSE
+    // MODAL CONTROLS
     function openModal() {
-      sound.tap();
+      sound.click();
       triggerHaptic(15);
       modalBackdrop.classList.remove('opacity-0', 'pointer-events-none');
       taskModal.classList.remove('translate-y-full', 'pointer-events-none');
@@ -464,34 +581,35 @@
 
     openModalBtn.addEventListener('click', openModal);
     closeModalBtn.addEventListener('click', closeModal);
+    cancelModalBtn.addEventListener('click', closeModal);
     modalBackdrop.addEventListener('click', closeModal);
 
-    // FORM SUBMIT
+    // FORM SUBMIT HANDLER
     taskForm.addEventListener('submit', (e) => {
       e.preventDefault();
       const title = taskTitle.value.trim();
       if (!title) return;
 
-      const cat = document.getElementById('task-category').value;
-      const prio = document.getElementById('task-priority').value;
+      const category = document.getElementById('task-category').value;
+      const priority = document.getElementById('task-priority').value;
       const due = document.getElementById('task-due').value;
 
       tasks.unshift({
         id: Date.now(),
         title: title,
-        category: cat,
-        priority: prio,
+        category: category,
+        priority: priority,
         due: due,
         completed: false
       });
 
-      sound.complete();
+      sound.done();
       triggerHaptic([15, 30]);
       saveTasks();
       closeModal();
     });
 
-    // SEARCH
+    // SEARCH INPUT HANDLER
     searchInput.addEventListener('input', (e) => {
       searchQuery = e.target.value;
       clearSearch.classList.toggle('hidden', !searchQuery);
@@ -506,69 +624,74 @@
       searchInput.focus();
     });
 
-    // CATEGORY FILTER PILLS
-    document.querySelectorAll('.cat-pill').forEach(btn => {
+    // CATEGORY FILTER CHIPS
+    document.querySelectorAll('.cat-chip').forEach(btn => {
       btn.addEventListener('click', () => {
-        sound.tap();
+        sound.click();
         triggerHaptic(10);
-        document.querySelectorAll('.cat-pill').forEach(b => {
-          b.classList.remove('bg-[#ff9900]', 'text-black', 'shadow-sm');
-          b.classList.add('bg-[#161b26]', 'border', 'border-[#273042]');
+        document.querySelectorAll('.cat-chip').forEach(b => {
+          b.classList.remove('bg-[#ff9900]', 'text-black', 'shadow-[0_0_8px_rgba(255,153,0,0.3)]');
+          b.classList.add('bg-[#111622]');
         });
-        btn.classList.remove('bg-[#161b26]', 'border', 'border-[#273042]');
-        btn.classList.add('bg-[#ff9900]', 'text-black', 'shadow-sm');
+        btn.classList.add('bg-[#ff9900]', 'text-black', 'shadow-[0_0_8px_rgba(255,153,0,0.3)]');
+        btn.classList.remove('bg-[#111622]');
         activeCategory = btn.dataset.cat;
         render();
       });
     });
 
-    // STATUS TABS
+    // STATUS TABS (ALL / ACTIVE / COMPLETED)
     const tabAll = document.getElementById('tab-all');
     const tabActive = document.getElementById('tab-active');
     const tabCompleted = document.getElementById('tab-completed');
-    const tabs = [tabAll, tabActive, tabCompleted];
+    const statusTabs = [tabAll, tabActive, tabCompleted];
 
-    function setTab(activeTab, filter) {
-      sound.tap();
+    function selectStatusTab(selectedTab, filter) {
+      sound.click();
       triggerHaptic(10);
-      tabs.forEach(t => {
-        t.classList.remove('bg-[#ff9900]', 'text-black', 'font-semibold');
-        t.classList.add('text-slate-300', 'font-medium');
+      statusTabs.forEach(t => {
+        t.classList.remove('bg-[#ff9900]', 'text-black');
+        t.classList.add('text-slate-300');
       });
-      activeTab.classList.add('bg-[#ff9900]', 'text-black', 'font-semibold');
-      activeTab.classList.remove('text-slate-300', 'font-medium');
+      selectedTab.classList.add('bg-[#ff9900]', 'text-black');
+      selectedTab.classList.remove('text-slate-300');
       activeFilter = filter;
       render();
     }
 
-    tabAll.addEventListener('click', () => setTab(tabAll, 'all'));
-    tabActive.addEventListener('click', () => setTab(tabActive, 'active'));
-    tabCompleted.addEventListener('click', () => setTab(tabCompleted, 'completed'));
+    tabAll.addEventListener('click', () => selectStatusTab(tabAll, 'all'));
+    tabActive.addEventListener('click', () => selectStatusTab(tabActive, 'active'));
+    tabCompleted.addEventListener('click', () => selectStatusTab(tabCompleted, 'completed'));
 
-    // SOUND TOGGLE
+    // AUDIO TOGGLE
     soundBtn.addEventListener('click', () => {
       sound.enabled = !sound.enabled;
       if (sound.enabled) {
-        sound.tap();
+        sound.click();
         soundIcon.classList.replace('fa-volume-xmark', 'fa-volume-high');
         soundBtn.classList.replace('text-slate-500', 'text-[#ffaa00]');
+        soundBtn.classList.replace('border-slate-700', 'border-[#ffaa00]');
       } else {
         soundIcon.classList.replace('fa-volume-high', 'fa-volume-xmark');
         soundBtn.classList.replace('text-[#ffaa00]', 'text-slate-500');
+        soundBtn.classList.replace('border-[#ffaa00]', 'border-slate-700');
       }
     });
 
-    // Touch unlock for Web Audio
-    const unlock = () => {
+    // TOUCH AUDIO CONTEXT UNLOCK
+    const unlockAudio = () => {
       sound.init();
-      window.removeEventListener('click', unlock);
-      window.removeEventListener('touchstart', unlock);
+      window.removeEventListener('click', unlockAudio);
+      window.removeEventListener('touchstart', unlockAudio);
     };
-    window.addEventListener('click', unlock, { passive: true });
-    window.addEventListener('touchstart', unlock, { passive: true });
+    window.addEventListener('click', unlockAudio, { passive: true });
+    window.addEventListener('touchstart', unlockAudio, { passive: true });
 
-    // Init
-    window.addEventListener('DOMContentLoaded', loadTasks);
+    // INITIALIZATION
+    window.addEventListener('DOMContentLoaded', () => {
+      updateDate();
+      loadTasks();
+    });
   </script>
 </body>
 </html>
